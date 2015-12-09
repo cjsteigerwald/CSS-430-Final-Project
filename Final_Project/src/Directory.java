@@ -41,5 +41,21 @@ public class Directory {
 
     public short namei( String filename ) {
         // returns the inumber corresponding to this filename
+
     }
+
+    // returns next available iNode that is not used by iterating through the fsize looking for '0' indicating
+    // an empty slot.
+    // returns short : value of iNode
+    public short findNextInode ()
+    {
+        for (short i = 0; i < fnames.length; i++)
+        {
+            if (fsize[i] == 0)
+            {
+                return i;
+            }
+        }
+        return -1;
+    } // end findNextInode
 }

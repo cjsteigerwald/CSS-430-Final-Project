@@ -12,6 +12,6 @@ public class FileTableEntry {          // Each table entry should have
         count = 1;               // at least on thread is using this entry
         mode = m;                // once access mode is set, it never changes
         if ( mode.compareTo( "a" ) == 0 ) // if mode is append,
-            seekPtr = iNode.length;        // seekPtr points to the end of file
+            seekPtr = iNode.fileSize;        // seekPtr points to the end of file
     }
 }
