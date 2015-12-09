@@ -42,6 +42,7 @@ public class FileTable {
             {
                 Inumber = dir.findNextInode();
                 Inode iNodeBuffer = new Inode(Inumber);
+                iNodeBuffer.count ++;
                 entry = new FileTableEntry(iNodeBuffer, Inumber, mode);
                 table.add(entry);
                 return entry;
