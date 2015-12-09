@@ -54,6 +54,7 @@ public class Kernel {
     private static Scheduler scheduler;
     private static Disk disk;
     private static Cache cache;
+    private static FileSystem fs;
 
     // Synchronized Queues
     private static SyncQueue waitQueue; // for threads to wait for their child
@@ -225,7 +226,7 @@ public class Kernel {
                                 return ERROR;
                             }
                             if (myTcb.returnFd(param) != ftEnt) {
-                                return ERROR
+                                return ERROR;
                             }
                         }
                         return ERROR;
@@ -256,10 +257,10 @@ public class Kernel {
                         return ERROR;
                     case FORMAT:
                         // to be implemented in project
-                        return (fs.format(param) == true) ? OK : ERROR;
+                        return (fs.format(param) == 0) ? OK : ERROR;
                     case DELETE:
                         // to be implemented in project
-                        return (fs.delete((String)args) == true) ? OK : ERROR;
+                        return (fs.delete((String)args) == 0) ? OK : ERROR;
                 }
                 return ERROR;
             case INTERRUPT_DISK:

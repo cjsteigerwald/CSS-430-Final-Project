@@ -66,7 +66,8 @@ public class Inode {
         spaceTracker += shortBlock;
         SysLib.short2bytes(usedFlag, nodeBuffer, spaceTracker);
         spaceTracker += shortBlock;
-                for(int i = 0; i < directSize; i++)
+
+        for(int i = 0; i < directSize; i++)
         {
             SysLib.short2bytes(direct[i], nodeBuffer, spaceTracker);
             spaceTracker += shortBlock;

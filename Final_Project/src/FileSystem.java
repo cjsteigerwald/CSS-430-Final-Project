@@ -31,21 +31,41 @@ public class FileSystem {
 
     }
 
-    boolean format(int files) {
-
+    int format(int files) {
+        superblock.format(files);
+        directory = new Directory(superblock.inodeBlocks);
+        filetable = new FileTable(directory);
+        return 0;
     }
 
     FileTableEntry open(String filename, String mode) {
-
+        if (mode != "w" || mode != "w+" || mode != "r" || mode != "a")
+        {
+            return null;
+        }
+        else
+        {
+            FileTableEntry entry = filetable.falloc(filename, mode);
+            return entry;
+        }
     }
 
     boolean close(FileTableEntry ftEnt) {
-
+        synchronized (ftEnt)
+        {
+            ftEnt.count--;
+        }
+        if (ftEnt.count == 0)
+        {
+            filetable.ffree(ftEnt);
+            return true;
+        }
+        return false;
     }
 
     int fsize(FileTableEntry ftEnt)
     {
-
+        return ftEnt.iNode.fileSize;
     }
 
     int read(FileTableEntry ftEnt, byte[] buffer)
@@ -58,14 +78,18 @@ public class FileSystem {
 
     }
 
-    private boolean deallocAllBlocks(FileTableEntry ftEnt)
+    int delete(String filename)
     {
-
-    }
-
-    boolean delete(String filename)
-    {
-
+        //FileTableEntry entry = open(filename, "w");
+        //short iNumber = directory.namei(filename);
+        if (directory.ifree(directory.namei(filename)))
+        {
+            return 0;
+        }
+        else
+        {
+            return -1;
+        }
     }
 
     private final int SEEK_SET = 0;

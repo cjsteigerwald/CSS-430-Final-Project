@@ -84,8 +84,34 @@ public class Directory {
             }
             return true;
         }
+    }
 
+    public int maxSize()
+    {
+        return fsize.length;
+    }
 
+    public boolean deleteNode(int iNumber)
+    {
+        if (iNumber < 0 || iNumber > fsize.length)
+        {
+            return false;
+        }
+        else
+        {
+            fsize[iNumber] = 0;
+            for(int i = 0; i < maxChars; i++)
+            {
+                fnames[iNumber][i] = '0';
+            }
+            return true;
+        }
+
+    }
+
+    public int getFileSize(int Inumber)
+    {
+        return fsize[Inumber];
     }
 
     public short namei( String filename ) {
