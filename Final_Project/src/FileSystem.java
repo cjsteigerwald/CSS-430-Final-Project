@@ -28,7 +28,11 @@ public class FileSystem {
     } // FileSystem overloaded
 
     void sync() {
-
+        FileTableEntry ftEnt = this.open("/", "w");
+        byte[] data = this.directory.directory2bytes();
+        this.write(ftEnt, data);
+        this.close(ftEnt);
+        this.superblock.sync();
     }
 
     int format(int files) {
@@ -163,7 +167,35 @@ public class FileSystem {
 
     int seek(FileTableEntry ftEnt, int offset, int whence)
     {
-
+        synchronized (ftEnt) {
+            switch(whence) {
+                case 0:
+                    if(offset < 0)
+                        ftEnt.seekPtr = 0;
+                    else if (offset > this.fsize(ftEnt))
+                        ftEnt.seekPtr = this.fsize(ftEnt);
+                    else
+                        ftEnt.seekPtr = offset;
+                    break;
+                case 1:
+                    if((ftEnt.seekPtr + offset) < 0)
+                        ftEnt.seekPtr = 0;
+                    else if((ftEnt.seekPtr + offset) > this.fsize(ftEnt))
+                        ftEnt.seekPtr = this.fsize(ftEnt);
+                    else
+                        ftEnt.seekPtr += offset;
+                    break;
+                case 2:
+                    if((this.fsize(ftEnt) + offset) < 0)
+                        ftEnt.seekPtr = 0;
+                    else if((this.fsize(ftEnt) + offset) > this.fsize(ftEnt))
+                        ftEnt.seekPtr = this.fsize(ftEnt);
+                    else
+                        ftEnt.seekPtr = this.fsize(ftEnt) + offset;
+                    break;
+            }
+            return ftEnt.seekPtr;
+        }
     }
 
 } // end FileSystem class default
