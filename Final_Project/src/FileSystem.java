@@ -1,5 +1,5 @@
 /**
- * Created by Chris on 12/6/2015.
+ * Created by Chris Steigerwald, Hunter Grayson, Michael Voight on 12/6/2015.
  */
 public class FileSystem {
     private SuperBlock superblock;
@@ -72,6 +72,8 @@ public class FileSystem {
         return ftEnt.iNode.fileSize;
     }
 
+
+    // Remember that direct links 0-2 are used for stdin, stout, err
     int read(FileTableEntry ftEnt, byte[] buffer)
     {
         // get INode number from FileTableEntry object
@@ -99,7 +101,8 @@ public class FileSystem {
             int spaceTracker = 0;
                     //int readSize = 0;
             // for loop for iterating through iNode direct pointers
-            for (int i = 0; i < ftEnt.iNode.direct.length; i++, spaceTracker += blockSize)
+            // i = 3 because the first pointer are for stdin, stdout, and err
+            for (int i = 3; i < ftEnt.iNode.direct.length; i++, spaceTracker += blockSize)
             {
                 // if iNode's direct pointer points to block, read in block and copy to buffer
                 if(ftEnt.iNode.direct[i] != -1)
@@ -118,22 +121,28 @@ public class FileSystem {
             {
                 // tracker for indirect block addresses
                 int addressPointer = 0;
+                // int for holding size of address in indirect block
+                int addressLength = 4;
                 // buffer for holding address of block from indirect block addresses
                 byte[] addressBuffer = new byte[blockSize];
                 // holds address being read from addressBuffer for indirect links
-                byte[] readAddress = new byte[4];
-                //
+                byte[] readAddress = new byte[addressLength];
+                // reads buffer of 4 bytes into addressBuffer
                 SysLib.rawread(ftEnt.iNode.indirect, addressBuffer);
-                for (int i = 0; i < addInBlock; i += 4, spaceTracker += blockSize)
+                // iterator for indirect links, while addressBuffer input is not 0 will iterate
+                // to next block
+                for (int i = 0; i < addInBlock; i += addressLength, spaceTracker += blockSize)
                 {
-                    System.arraycopy(addressBuffer, i, readAddress, 0, 4);
+                    System.arraycopy(addressBuffer, i, readAddress, 0, addressLength);
                     addressPointer = SysLib.bytes2int(readAddress, 0);
+                    // address block is now equal 0 indicating no more indirect addresses
                     if (addressPointer == 0)
                     {
                         return spaceTracker;
                     }
-
+                    // // reads addressPointer buffer into readBuffer to prepare to be added to buffer
                     SysLib.rawread(addressPointer, readBuffer);
+                    // uses arraycopy to copy readBuffer onto buffer at placement spaceTracker
                     System.arraycopy(readBuffer, 0, buffer, spaceTracker, blockSize);
                 }
                 return spaceTracker;
@@ -144,7 +153,14 @@ public class FileSystem {
 
     int write(FileTableEntry ftEnt, byte[] buffer)
     {
+        // size of block
+        int blockSize = 512;
+        // buffer used to write to disk
+        byte[] writeBuffer = new byte[blockSize];
+        // pointer to keep track of location
+        int spaceTrakcer;
 
+        return -1;
     }
 
     int delete(String filename)
@@ -167,6 +183,7 @@ public class FileSystem {
 
     int seek(FileTableEntry ftEnt, int offset, int whence)
     {
+<<<<<<< Updated upstream
         synchronized (ftEnt) {
             switch(whence) {
                 case 0:
@@ -196,6 +213,9 @@ public class FileSystem {
             }
             return ftEnt.seekPtr;
         }
+=======
+        return -1;
+>>>>>>> Stashed changes
     }
 
 } // end FileSystem class default
