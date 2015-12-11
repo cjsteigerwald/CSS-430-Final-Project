@@ -5,6 +5,10 @@ public class FileSystem {
     private SuperBlock superblock;
     private Directory directory;
     private FileTable filetable;
+    private boolean[] freeBlockTable;   // "true" equals free, "false" equals full
+    private final int SEEK_SET = 0;
+    private final int SEEK_CUR = 1;
+    private final int SEEK_END = 2;
 
     public FileSystem(int diskBlocks) {
         // create superblock, and format disk with 64 inodes in default
@@ -16,6 +20,13 @@ public class FileSystem {
         // file table is created, and store directory in the file table
         filetable = new FileTable(directory);
 
+        // set freeBlockTable all blocks to free
+        // i = 3 to skip superblock and iNodes
+        freeBlockTable = new boolean[diskBlocks];
+        for (int i = 3; i < diskBlocks; i++)
+        {
+            freeBlockTable[i] = true;
+        }
         // directory reconstruction
         FileTableEntry dirEnt = open("/", "r");
         int dirSize = fsize(dirEnt);
@@ -151,16 +162,101 @@ public class FileSystem {
         return -1;
     }
 
+    short findFreeBlock()
+    {
+        for(short i = 3; i < freeBlockTable.length; i++)
+        {
+            if (freeBlockTable[i] == true)
+            {
+                return i;
+            }
+        }
+        System.out.print("Error, disk is full");
+        return -1;
+    }
+
     int write(FileTableEntry ftEnt, byte[] buffer)
     {
-        // size of block
-        int blockSize = 512;
-        // buffer used to write to disk
-        byte[] writeBuffer = new byte[blockSize];
-        // pointer to keep track of location
-        int spaceTrakcer;
 
-        return -1;
+        // pointer to keep track of location
+
+        synchronized (ftEnt)
+        {
+            if(ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a")
+            {
+                // size of block
+                int blockSize = 512;
+                int maxBlocks = 267;
+                if (buffer.length / blockSize > maxBlocks + 1)
+                {
+                    System.out.println("Error: file size too large");
+                    return -1;
+                }
+
+                if(ftEnt.mode == "a")
+                {
+
+
+
+                } // end if(ftEnt.mode == "a")
+
+                // this is for cases "w" and "w+"
+                else
+                {
+                    int spaceTracker = seek(ftEnt, 0, SEEK_SET);
+                    // buffer used to write to disk
+                    byte[] writeBuffer = new byte[blockSize];
+                    // indirect Buffer
+                    byte[] indirectBuffer = new byte[blockSize];
+
+                    int indirectTracker = 0;
+
+                    for (int blockTracker = 0; spaceTracker < (buffer.length / blockSize); blockTracker++, spaceTracker += 512)
+                    {
+                        // for 11 direct pointer
+                        if (blockTracker < 11) {
+                            ftEnt.iNode.direct[blockTracker] = findFreeBlock();
+                            System.arraycopy(buffer, spaceTracker, writeBuffer, 0, blockSize);
+                            SysLib.write(ftEnt.iNode.direct[blockTracker], writeBuffer);
+                            freeBlockTable[ftEnt.iNode.direct[blockTracker]] = false;
+                        }
+                        // sets Inode.indirect pointer to a free block
+                        if (blockTracker == 11)
+                        {
+                            // setting indirect pointer to a free block
+                            ftEnt.iNode.indirect = findFreeBlock();
+                            // set freeBlockTable entry to false
+                            freeBlockTable[ftEnt.iNode.indirect] = false;
+
+                        }
+                        if (blockTracker >= 11)
+                        {
+                            // find next free block to write from buffer to block indirect points to
+                            int newBlock = findFreeBlock();
+                            // from buffer to writeBuffer
+                            System.arraycopy(buffer, spaceTracker, writeBuffer, 0, blockSize);
+                            // write to disk
+                            SysLib.write(newBlock, writeBuffer);
+
+                            // write address in bytes of new block to indirectBuffer for holding pointers
+                            SysLib.int2bytes(newBlock, indirectBuffer, indirectTracker);
+                            // increment pointer by 4 for int value in bytes
+                            indirectTracker += 4;
+                        }
+                    } // end for()
+                    // write to disk
+                    SysLib.write(ftEnt.iNode.indirect, indirectBuffer);
+                } // end else
+            } //  end if(ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a")
+            // mode "r" or incompatible mode types
+            else
+            {
+                return -1;
+            }
+
+        }
+
+
     }
 
     int delete(String filename)
@@ -177,13 +273,9 @@ public class FileSystem {
         }
     }
 
-    private final int SEEK_SET = 0;
-    private final int SEEK_CUR = 0;
-    private final int SEEK_END = 0;
 
     int seek(FileTableEntry ftEnt, int offset, int whence)
     {
-<<<<<<< Updated upstream
         synchronized (ftEnt) {
             switch(whence) {
                 case 0:
@@ -213,9 +305,6 @@ public class FileSystem {
             }
             return ftEnt.seekPtr;
         }
-=======
-        return -1;
->>>>>>> Stashed changes
     }
 
 } // end FileSystem class default
