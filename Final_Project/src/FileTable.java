@@ -5,7 +5,7 @@ import java.util.Vector;
  */
 public class FileTable {
 
-    private Vector table;         // the actual entity of this file table
+    private Vector <FileTableEntry> table;         // the actual entity of this file table
     private Directory dir;        // the root directory
 
     public FileTable( Directory directory ) { // constructor
@@ -62,4 +62,15 @@ public class FileTable {
     public synchronized boolean fempty( ) {
         return table.isEmpty( );  // return if table is empty
     }                            // should be called before starting a format
+
+    public Inode getInode(short iNumber)
+    {
+        boolean found = true;
+        for(int i = 0; i < table.size(); i++) {
+            if (table.elementAt(i).iNumber == iNumber) {
+                return table.elementAt(i).iNode;
+            }
+        }
+        return null;
+    }
 }

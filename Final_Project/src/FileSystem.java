@@ -89,6 +89,7 @@ public class FileSystem {
     {
         // get INode number from FileTableEntry object
         int iNumber = ftEnt.iNumber;
+        ftEnt.seekPtr = 0;
         // testing to make sure object is valid
         if (ftEnt.mode == "w" || ftEnt.mode == "a" || iNumber == -1)
         {
@@ -102,29 +103,27 @@ public class FileSystem {
             int blockSize = 512;
             // number of address locations in a block
             int addInBlock = 256;
-            int address = 4;
             // temp buffer for rawread to hold a block, and passed as source to arraycopy
             byte readBuffer[] = new byte[blockSize];
 
             //byte addBuffer[] = new byte[address];
                     //int maxBufferSize = buffer.length;     // 136,704 bytes max size
             // byte tracker for keeping track of position
-            int spaceTracker = 0;
                     //int readSize = 0;
             // for loop for iterating through iNode direct pointers
             // i = 3 because the first pointer are for stdin, stdout, and err
-            for (int i = 0; i < ftEnt.iNode.direct.length; i++, spaceTracker += blockSize)
+            for (int i = 0; i < ftEnt.iNode.direct.length; i++, ftEnt.seekPtr += blockSize)
             {
                 // if iNode's direct pointer points to block, read in block and copy to buffer
                 if(ftEnt.iNode.direct[i] != -1)
                 {
                     SysLib.rawread(ftEnt.iNode.direct[i], buffer);
-                    System.arraycopy(readBuffer, 0, buffer, spaceTracker, blockSize);
-                    spaceTracker += blockSize;
+                    System.arraycopy(readBuffer, 0, buffer, ftEnt.seekPtr, blockSize);
+                    ftEnt.seekPtr += blockSize;
                 }
                 else
                 {
-                    return spaceTracker;
+                    return ftEnt.seekPtr;
                 }
             }
             // if iNode's indirect pointer is pointing to block read into buffer
@@ -142,21 +141,21 @@ public class FileSystem {
                 SysLib.rawread(ftEnt.iNode.indirect, addressBuffer);
                 // iterator for indirect links, while addressBuffer input is not 0 will iterate
                 // to next block
-                for (int i = 0; i < addInBlock; i += addressLength, spaceTracker += blockSize)
+                for (int i = 0; i < addInBlock; i += addressLength, ftEnt.seekPtr += blockSize)
                 {
                     System.arraycopy(addressBuffer, i, readAddress, 0, addressLength);
                     addressPointer = SysLib.bytes2int(readAddress, 0);
                     // address block is now equal 0 indicating no more indirect addresses
                     if (addressPointer == 0)
                     {
-                        return spaceTracker;
+                        return ftEnt.seekPtr;
                     }
                     // // reads addressPointer buffer into readBuffer to prepare to be added to buffer
                     SysLib.rawread(addressPointer, readBuffer);
                     // uses arraycopy to copy readBuffer onto buffer at placement spaceTracker
-                    System.arraycopy(readBuffer, 0, buffer, spaceTracker, blockSize);
+                    System.arraycopy(readBuffer, 0, buffer, ftEnt.seekPtr, blockSize);
                 }
-                return spaceTracker;
+                return ftEnt.seekPtr;
             }
         } // end else statement
         return -1;
@@ -177,92 +176,104 @@ public class FileSystem {
 
     int write(FileTableEntry ftEnt, byte[] buffer)
     {
-
-        // pointer to keep track of location
-
-        synchronized (ftEnt)
-        {
-            if(ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a")
-            {
+        synchronized (ftEnt) {
+            if (ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a") {
                 // size of block
                 int blockSize = 512;
                 int maxBlocks = 267;
-                if (buffer.length / blockSize > maxBlocks + 1)
-                {
+                if (buffer.length / blockSize > maxBlocks + 1) {
                     System.out.println("Error: file size too large");
                     return -1;
                 }
 
-                if(ftEnt.mode == "a")
-                {
-
-
-
+                ftEnt.seekPtr = 0;
+                if (ftEnt.mode == "a") {
+                    seek(ftEnt, 0, SEEK_END);
                 } // end if(ftEnt.mode == "a")
 
-                // this is for cases "w" and "w+"
-                else
-                {
-                    int spaceTracker = seek(ftEnt, 0, SEEK_SET);
-                    // buffer used to write to disk
-                    byte[] writeBuffer = new byte[blockSize];
-                    // indirect Buffer
-                    byte[] indirectBuffer = new byte[blockSize];
+                // buffer used to write to disk
+                byte[] writeBuffer = new byte[blockSize];
+                // indirect Buffer
+                byte[] indirectBuffer = new byte[blockSize];
 
-                    int indirectTracker = 0;
+                int indirectTracker = 0;
 
-                    for (int blockTracker = 0; spaceTracker < (buffer.length / blockSize); blockTracker++, spaceTracker += 512)
-                    {
-                        // for 11 direct pointer
-                        if (blockTracker < 11) {
-                            ftEnt.iNode.direct[blockTracker] = findFreeBlock();
-                            System.arraycopy(buffer, spaceTracker, writeBuffer, 0, blockSize);
-                            SysLib.write(ftEnt.iNode.direct[blockTracker], writeBuffer);
-                            freeBlockTable[ftEnt.iNode.direct[blockTracker]] = false;
-                        }
-                        // sets Inode.indirect pointer to a free block
-                        if (blockTracker == 11)
-                        {
-                            // setting indirect pointer to a free block
-                            ftEnt.iNode.indirect = findFreeBlock();
-                            // set freeBlockTable entry to false
-                            freeBlockTable[ftEnt.iNode.indirect] = false;
+                for (int blockTracker = 0; blockTracker < (buffer.length / blockSize); blockTracker++, ftEnt.seekPtr += blockSize) {
+                    // for 11 direct pointer
+                    if (blockTracker < 11) {
+                        ftEnt.iNode.direct[blockTracker] = findFreeBlock();
+                        System.arraycopy(buffer, ftEnt.seekPtr, writeBuffer, 0, blockSize);
+                        SysLib.write(ftEnt.iNode.direct[blockTracker], writeBuffer);
+                        freeBlockTable[ftEnt.iNode.direct[blockTracker]] = false;
+                    }
+                    // sets Inode.indirect pointer to a free block
+                    if (blockTracker == 11) {
+                        // setting indirect pointer to a free block
+                        ftEnt.iNode.indirect = findFreeBlock();
+                        // set freeBlockTable entry to false
+                        freeBlockTable[ftEnt.iNode.indirect] = false;
+                    }
+                    if (blockTracker >= 11) {
+                        // find next free block to write from buffer to block indirect points to
+                        int newBlock = findFreeBlock();
+                        // from buffer to writeBuffer
+                        System.arraycopy(buffer, ftEnt.seekPtr, writeBuffer, 0, blockSize);
+                        // write to disk
+                        SysLib.write(newBlock, writeBuffer);
 
-                        }
-                        if (blockTracker >= 11)
-                        {
-                            // find next free block to write from buffer to block indirect points to
-                            int newBlock = findFreeBlock();
-                            // from buffer to writeBuffer
-                            System.arraycopy(buffer, spaceTracker, writeBuffer, 0, blockSize);
-                            // write to disk
-                            SysLib.write(newBlock, writeBuffer);
-
-                            // write address in bytes of new block to indirectBuffer for holding pointers
-                            SysLib.int2bytes(newBlock, indirectBuffer, indirectTracker);
-                            // increment pointer by 4 for int value in bytes
-                            indirectTracker += 4;
-                        }
-                    } // end for()
-                    // write to disk
+                        // write address in bytes of new block to indirectBuffer for holding pointers
+                        SysLib.int2bytes(newBlock, indirectBuffer, indirectTracker);
+                        // increment pointer by 4 for int value in bytes
+                        indirectTracker += 4;
+                    }
+                } // end for()
+                // write to disk if using indirect block, write buffer of addresses to block indirect points to
+                if ((buffer.length / blockSize) > 11) {
                     SysLib.write(ftEnt.iNode.indirect, indirectBuffer);
+                }
+
+                    return ftEnt.seekPtr;
                 } // end else
-            } //  end if(ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a")
+            //  end if(ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a")
             // mode "r" or incompatible mode types
-            else
-            {
+            else {
                 return -1;
             }
-
         }
-
-
     }
 
     int delete(String filename)
     {
+        short iNumber = directory.namei(filename);
+        Inode inode = filetable.getInode(iNumber);
+        byte[] killer = new byte [512];
+
         //FileTableEntry entry = open(filename, "w");
         //short iNumber = directory.namei(filename);
+        for( int i = 0; i < 11; i++ )
+        {
+            if(inode.direct[i] != -1)
+            {
+                SysLib.write(inode.direct[i], killer);
+            }
+        }
+        if (inode.indirect != -1)
+        {
+            short blockTracker = 0;
+            byte[] address = new byte [512];
+            SysLib.rawread(inode.indirect, address);
+            for(int i = 0; i < 256; i++, blockTracker +=2)
+            {
+                short theAddress = SysLib.bytes2short(address, blockTracker);
+                if (theAddress > 2)
+                {
+                    SysLib.rawwrite(theAddress, killer);
+                    freeBlockTable[theAddress] = true;
+                }
+            }
+            SysLib.rawwrite(inode.indirect, killer);
+            freeBlockTable[inode.indirect] = true;
+        }
         if (directory.ifree(directory.namei(filename)))
         {
             return 0;
@@ -305,6 +316,13 @@ public class FileSystem {
             }
             return ftEnt.seekPtr;
         }
+    }
+
+    int blockFormattor(int target)
+    {
+        byte[] format = new byte[512];
+        SysLib.write(target, format);
+        return target;
     }
 
 } // end FileSystem class default

@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="91003dc8-db2c-44d8-99d2-7421d47bcb1b" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Directory.java" afterPath="$PROJECT_DIR$/src/Directory.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/FileSystem.java" afterPath="$PROJECT_DIR$/src/FileSystem.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/FileTable.java" afterPath="$PROJECT_DIR$/src/FileTable.java" />
     </list>
     <ignored path="Final_Project.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -57,8 +59,8 @@
       <file leaf-file-name="Directory.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Directory.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="86" column="5" selection-start-line="86" selection-start-column="5" selection-end-line="86" selection-end-column="5" />
+            <state vertical-scroll-proportion="-45.666668">
+              <caret line="145" column="0" selection-start-line="145" selection-start-column="0" selection-end-line="145" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -68,7 +70,7 @@
         <entry file="file://$PROJECT_DIR$/src/FileTable.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+              <caret line="73" column="8" selection-start-line="73" selection-start-column="8" selection-end-line="73" selection-end-column="8" />
               <folding />
             </state>
           </provider>
@@ -77,8 +79,8 @@
       <file leaf-file-name="Superblock.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Superblock.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="7" column="46" selection-start-line="7" selection-start-column="46" selection-end-line="7" selection-end-column="46" />
+            <state vertical-scroll-proportion="-4.4444447">
+              <caret line="8" column="31" selection-start-line="8" selection-start-column="30" selection-end-line="8" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -98,7 +100,7 @@
         <entry file="file://$PROJECT_DIR$/src/Inode.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="90" column="5" selection-start-line="90" selection-start-column="5" selection-end-line="90" selection-end-column="5" />
+              <caret line="22" column="21" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="21" />
               <folding />
             </state>
           </provider>
@@ -117,8 +119,8 @@
       <file leaf-file-name="FileSystem.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/FileSystem.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.31868133">
-              <caret line="225" column="71" selection-start-line="225" selection-start-column="71" selection-end-line="225" selection-end-column="71" />
+            <state vertical-scroll-proportion="2.8161435">
+              <caret line="273" column="52" selection-start-line="273" selection-start-column="52" selection-end-line="273" selection-end-column="52" />
               <folding>
                 <element signature="e#2428#2429#0" expanded="true" />
                 <element signature="e#2471#2472#0" expanded="true" />
@@ -161,10 +163,10 @@
         <option value="$PROJECT_DIR$/src/Superblock.java" />
         <option value="$PROJECT_DIR$/src/FileTableEntry.java" />
         <option value="$PROJECT_DIR$/src/FileStructureTable.java" />
-        <option value="$PROJECT_DIR$/src/Directory.java" />
-        <option value="$PROJECT_DIR$/src/FileTable.java" />
         <option value="$PROJECT_DIR$/src/Inode.java" />
         <option value="$PROJECT_DIR$/src/Kernel.java" />
+        <option value="$PROJECT_DIR$/src/Directory.java" />
+        <option value="$PROJECT_DIR$/src/FileTable.java" />
         <option value="$PROJECT_DIR$/src/FileSystem.java" />
       </list>
     </option>
@@ -939,14 +941,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/FileTable.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/Kernel.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-13.185185">
@@ -963,14 +957,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/FileTableEntry.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="3" column="22" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ThreadOS/Disk.class">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-0.5555556">
@@ -981,24 +967,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Superblock.java">
       <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-4.4444447">
+          <caret line="8" column="31" selection-start-line="8" selection-start-column="30" selection-end-line="8" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/FileTableEntry.java">
+      <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="7" column="46" selection-start-line="7" selection-start-column="46" selection-end-line="7" selection-end-column="46" />
+          <caret line="3" column="22" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="22" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Directory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="86" column="5" selection-start-line="86" selection-start-column="5" selection-end-line="86" selection-end-column="5" />
+        <state vertical-scroll-proportion="-45.666668">
+          <caret line="145" column="0" selection-start-line="145" selection-start-column="0" selection-end-line="145" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Inode.java">
+    <entry file="file://$PROJECT_DIR$/src/FileTable.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="90" column="5" selection-start-line="90" selection-start-column="5" selection-end-line="90" selection-end-column="5" />
+          <caret line="73" column="8" selection-start-line="73" selection-start-column="8" selection-end-line="73" selection-end-column="8" />
           <folding />
         </state>
       </provider>
@@ -1011,10 +1005,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/Inode.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="22" column="21" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/FileSystem.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.31868133">
-          <caret line="225" column="71" selection-start-line="225" selection-start-column="71" selection-end-line="225" selection-end-column="71" />
+        <state vertical-scroll-proportion="2.8161435">
+          <caret line="273" column="52" selection-start-line="273" selection-start-column="52" selection-end-line="273" selection-end-column="52" />
           <folding>
             <element signature="e#2428#2429#0" expanded="true" />
             <element signature="e#2471#2472#0" expanded="true" />
