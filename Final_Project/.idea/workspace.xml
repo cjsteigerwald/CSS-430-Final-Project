@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="91003dc8-db2c-44d8-99d2-7421d47bcb1b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/FileSystem.java" afterPath="$PROJECT_DIR$/src/FileSystem.java" />
     </list>
     <ignored path="Final_Project.iws" />
@@ -45,10 +44,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Superblock.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Superblock.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Superblock.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.12087912">
+            <state vertical-scroll-proportion="0.0">
               <caret line="11" column="50" selection-start-line="11" selection-start-column="50" selection-end-line="11" selection-end-column="50" />
               <folding />
             </state>
@@ -75,14 +74,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FileSystem.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="FileSystem.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/FileSystem.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="156" column="25" selection-start-line="156" selection-start-column="25" selection-end-line="156" selection-end-column="25" />
+            <state vertical-scroll-proportion="-0.35164836">
+              <caret line="104" column="26" selection-start-line="104" selection-start-column="26" selection-end-line="104" selection-end-column="26" />
               <folding>
-                <element signature="e#6332#6333#0" expanded="true" />
-                <element signature="e#6357#6358#0" expanded="true" />
+                <element signature="e#1988#1989#0" expanded="true" />
+                <element signature="e#2031#2032#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -598,8 +597,8 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="66" column="5" selection-start-line="66" selection-start-column="5" selection-end-line="66" selection-end-column="5" />
           <folding>
-            <element signature="e#6332#6333#0" expanded="true" />
-            <element signature="e#6357#6358#0" expanded="true" />
+            <element signature="e#1988#1989#0" expanded="true" />
+            <element signature="e#2031#2032#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -955,17 +954,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/FileSystem.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="156" column="25" selection-start-line="156" selection-start-column="25" selection-end-line="156" selection-end-column="25" />
-          <folding>
-            <element signature="e#6332#6333#0" expanded="true" />
-            <element signature="e#6357#6358#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/Inode.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -976,9 +964,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Superblock.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.12087912">
+        <state vertical-scroll-proportion="0.0">
           <caret line="11" column="50" selection-start-line="11" selection-start-column="50" selection-end-line="11" selection-end-column="50" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/FileSystem.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.35164836">
+          <caret line="104" column="26" selection-start-line="104" selection-start-column="26" selection-end-line="104" selection-end-column="26" />
+          <folding>
+            <element signature="e#1988#1989#0" expanded="true" />
+            <element signature="e#2031#2032#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

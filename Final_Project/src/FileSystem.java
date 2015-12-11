@@ -102,7 +102,7 @@ public class FileSystem {
                     //int readSize = 0;
             // for loop for iterating through iNode direct pointers
             // i = 3 because the first pointer are for stdin, stdout, and err
-            for (int i = 3; i < ftEnt.iNode.direct.length; i++, spaceTracker += blockSize)
+            for (int i = 0; i < ftEnt.iNode.direct.length; i++, spaceTracker += blockSize)
             {
                 // if iNode's direct pointer points to block, read in block and copy to buffer
                 if(ftEnt.iNode.direct[i] != -1)
