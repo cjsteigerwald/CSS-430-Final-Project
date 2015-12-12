@@ -27,7 +27,7 @@ public class Inode {
     Inode( short iNumber ) {                       // retrieving iNode from disk
         // design it by yourself.
         // Block number where inode is located on disk
-        int nodeBlock = (iNumber % blockSize) + 1;
+        int nodeBlock = (iNumber / blockSize) + 1;
 
         // buffer to hold data from nodeBlock
         byte[] dataBuffer = new byte[maxBytes];
@@ -50,12 +50,13 @@ public class Inode {
             spaceTracker += shortBlock;
         }
         indirect = SysLib.bytes2short(dataBuffer, spaceTracker);
+        spaceTracker += shortBlock;
     }
 
     int toDisk( short iNumber ) {                  // save to disk as the i-th iNode
         // design it by yourself.
         // nodeBlock is the iNode number * blockSize + 1 (+1 skips SuperBlock) to determine block to write to
-        int nodeBlock = (iNumber % blockSize) + 1;
+        int nodeBlock = (iNumber / blockSize) + 1;
 
         byte[] nodeBuffer = new byte[iNodeSize];
         int spaceTracker = 0;
@@ -73,6 +74,7 @@ public class Inode {
             spaceTracker += shortBlock;
         }
         SysLib.short2bytes(indirect, nodeBuffer, spaceTracker);
+        spaceTracker += shortBlock;
 
         // reset spaceTracker for inserting nodeBuffer into dataBuffer
         spaceTracker = (iNumber % blockSize) * iNodeSize;

@@ -439,7 +439,7 @@ class Test5 extends Thread {
     fd = SysLib.open( "bothell", "w+" );
     SysLib.seek( fd, 512 * 12 - 3, 0 );
     SysLib.write( fd, buf24 );
-  
+
     SysLib.seek( fd, 0, 0 );
     byte[] tmpBuf = new byte[6688];
     SysLib.read( fd, tmpBuf );

@@ -54,7 +54,7 @@ public class Kernel {
     private static Scheduler scheduler;
     private static Disk disk;
     private static Cache cache;
-    private static FileSystem fs;
+    private static FileSystem fileSystem;
 
     // Synchronized Queues
     private static SyncQueue waitQueue; // for threads to wait for their child
@@ -88,6 +88,7 @@ public class Kernel {
                         // instantiate synchronized queues
                         ioQueue = new SyncQueue();
                         waitQueue = new SyncQueue(scheduler.getMaxThreads());
+                        fileSystem = new FileSystem(1000);
                         return OK;
                     case EXEC:
                         return sysExec((String[]) args);
@@ -164,7 +165,7 @@ public class Kernel {
                                     // prepare a read buffer
                                     StringBuffer buf = (StringBuffer) args;
 
-                                    // append the keyboard intput to this read buffer
+                                    // append the keyboard input to this read buffer
                                     buf.append(s);
 
                                     // return the number of chars read from keyboard
@@ -178,7 +179,11 @@ public class Kernel {
                                 System.out.println("threadOS: caused read errors");
                                 return ERROR;
                         }
-                        // return FileSystem.read( param, byte args[] );
+                        if ((myTcb = scheduler.getMyTcb()) != null) {
+                            FileTableEntry entry = myTcb.getFtEnt(param);
+                            if (entry != null)
+                                return fileSystem.read(entry, (byte[]) args);
+                        }
                         return ERROR;
                     case WRITE:
                         switch (param) {
@@ -187,10 +192,15 @@ public class Kernel {
                                 return ERROR;
                             case STDOUT:
                                 System.out.print((String) args);
-                                break;
+                                return OK;
                             case STDERR:
                                 System.err.print((String) args);
-                                break;
+                                return OK;
+                        }
+                        if ( ( myTcb = scheduler.getMyTcb( ) ) != null ) {
+                            FileTableEntry ftEnt = myTcb.getFtEnt( param );
+                            if ( ftEnt != null )
+                                return fileSystem.write( ftEnt, ( byte[] )args );
                         }
                         return OK;
                     case CREAD:
@@ -212,7 +222,7 @@ public class Kernel {
                         if (( myTcb = scheduler.getMyTcb()) != null)
                         {
                             String[] s = (String[] )args;
-                            return myTcb.getFd(fs.open(s[0], s[1]));
+                            return myTcb.getFd(fileSystem.open(s[0], s[1]));
                         }
                         else
                         {
@@ -222,14 +232,14 @@ public class Kernel {
                         // to be implemented in project
                         if (( myTcb = scheduler.getMyTcb()) != null) {
                             FileTableEntry ftEnt = myTcb.getFtEnt(param);
-                            if (ftEnt == null || fs.close(ftEnt) == false) {
+                            if (ftEnt == null || !fileSystem.close(ftEnt)) {
                                 return ERROR;
                             }
                             if (myTcb.returnFd(param) != ftEnt) {
                                 return ERROR;
                             }
                         }
-                        return ERROR;
+                        return OK;
 
                     case SIZE:
                         // to be implemented in project
@@ -239,7 +249,7 @@ public class Kernel {
                             if (ftEnt != null)
                             {
                                 // not sure yet why fs is invalid
-                                return fs.fsize(ftEnt);
+                                return fileSystem.fsize(ftEnt);
                             }
                         }
                         return ERROR;
@@ -251,16 +261,16 @@ public class Kernel {
                             FileTableEntry ftEnt = myTcb.getFtEnt(param);
                             if (ftEnt != null)
                             {
-                                return fs.seek(ftEnt, seekArgs[0], seekArgs[1]);
+                                return fileSystem.seek(ftEnt, seekArgs[0], seekArgs[1]);
                             }
                         }
                         return ERROR;
                     case FORMAT:
                         // to be implemented in project
-                        return (fs.format(param) == 0) ? OK : ERROR;
+                        return (fileSystem.format(param)) ? OK : ERROR;
                     case DELETE:
                         // to be implemented in project
-                        return (fs.delete((String)args) == 0) ? OK : ERROR;
+                        return (fileSystem.delete((String)args)) ? OK : ERROR;
                 }
                 return ERROR;
             case INTERRUPT_DISK:

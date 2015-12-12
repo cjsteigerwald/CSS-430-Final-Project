@@ -19,18 +19,18 @@ public class Directory {
     public int bytes2directory( byte data[] ) {
         // assumes data[] received directory information from disk
         // initializes the Directory instance with this data[]
-        int spaceTracker;
-        int i = 0;
-        for (spaceTracker = 0; spaceTracker < fsize.length; spaceTracker += 4, i++)
+        int set = 0;
+        for (int i = 0; i < fnames.length; i++)
         {
-            fsize[i] = SysLib.bytes2int(data, spaceTracker);
+            set = i * 4;
+            fsize[i] = SysLib.bytes2int(data, set);
         }
-        i = 0;
-        String theString;
-        for ( ; spaceTracker < data.length; spaceTracker += maxChars, i++ )
-        {
-            theString = new String(data,spaceTracker, maxChars);
-            fnames[i] = theString.toCharArray();
+        set += 4;
+        for (int i = 0; i < fnames.length; i++) {
+            String fname = new String(data, set + (i * (maxChars * 2)), maxChars * 2);
+            for (int j = 0; j < fsize[i]; j++) {
+                fnames[i][j] = fname.charAt(j);
+            }
         }
         return 0;
     }
@@ -40,31 +40,75 @@ public class Directory {
         // this byte array will be written back to disk
         // note: only meaningfull directory information should be converted
         // into bytes.
-        byte[] data = new byte [(fsize.length * 4) + (fnames.length * 30)];
-        byte[] fileSize = new byte[4];
-        int spaceTracker = 0;
-        for (int i = 0; i < fsize.length; i++, spaceTracker += 4)
-        {
-            SysLib.int2bytes(fsize[i], data, spaceTracker);
+        byte[] tempReturn = new byte[(fnames.length * 4) + (fnames.length * (maxChars * 2))];
+        int offset = 0;
+        for (int i = 0; i < fnames.length; i++) {
+            SysLib.int2bytes(fsize[i], tempReturn, offset);
+            offset += 4;
         }
-        for (int i = 0; i < fnames.length; i++, spaceTracker += maxChars)
-        {
-            String theString = new String(fnames[i], 0, fsize[i]);
-            byte[] string2Bytes = theString.getBytes();
-            System.arraycopy(data, spaceTracker, string2Bytes, 0, maxChars);
+        for (int i = 0; i < fnames.length; i++) {
+            String fname = new String(fnames[i], 0, fsize[i]);
+            byte[] tempFname = fname.getBytes();
+            for (int j = 0; j < tempFname.length; j++) {
+                tempReturn[offset + j] = tempFname[j];
+            }
+            offset += (maxChars * 2);
         }
-        return data;
+        return tempReturn;
     }
+
+//    public int bytes2directory( byte data[] ) {
+//        // assumes data[] received directory information from disk
+//        // initializes the Directory instance with this data[]
+//        int spaceTracker;
+//        int i = 0;
+//        for (spaceTracker = 0; spaceTracker < fsize.length; spaceTracker += 4, i++)
+//        {
+//            fsize[i] = SysLib.bytes2int(data, spaceTracker);
+//        }
+//        i = 0;
+//        String theString;
+//        for ( ; spaceTracker < data.length; spaceTracker += maxChars, i++ )
+//        {
+//            theString = new String(data,spaceTracker, maxChars);
+//            fnames[i] = theString.toCharArray();
+//        }
+//        return 0;
+//    }
+//
+//    public byte[] directory2bytes( ) {
+//        // converts and return Directory information into a plain byte array
+//        // this byte array will be written back to disk
+//        // note: only meaningfull directory information should be converted
+//        // into bytes.
+//        byte[] data = new byte [(fsize.length * 4) + (fnames.length * 30)];
+//        int spaceTracker = 0;
+//        for (int i = 0; i < fsize.length; i++, spaceTracker += 4)
+//        {
+//            SysLib.int2bytes(fsize[i], data, spaceTracker);
+//        }
+//        for (int i = 0; i < fnames.length; i++, spaceTracker += maxChars)
+//        {
+//            String theString = new String(fnames[i], 0, fsize[i]);
+//            byte[] string2Bytes = theString.getBytes();
+//            System.arraycopy(data, spaceTracker, string2Bytes, 0, maxChars);
+//        }
+//        return data;
+//    }
 
     public short ialloc( String filename ) {
         // filename is the one of a file to be created.
         // allocates a new inode number for this filename
-        if (namei(filename) == -1)
-        {
-            return findNextInode();
+        for (int i = 0; i < fnames.length; i++) {
+            if (fsize[i] == 0) {
+                fsize[i] = filename.length();
+                for (int j = 0; j < fsize[i]; j++) {
+                    fnames[i][j] = filename.charAt(j);
+                }
+                return (short)i;
+            }
         }
-        else
-            return -1;
+        return 0;
     }
 
     public boolean ifree( short iNumber ) {
@@ -86,47 +130,30 @@ public class Directory {
         }
     }
 
-    public int maxSize()
-    {
-        return fsize.length;
-    }
-
-    public boolean deleteNode(int iNumber)
-    {
-        if (iNumber < 0 || iNumber > fsize.length)
-        {
-            return false;
-        }
-        else
-        {
-            fsize[iNumber] = 0;
-            for(int i = 0; i < maxChars; i++)
-            {
-                fnames[iNumber][i] = '0';
-            }
-            return true;
-        }
-
-    }
-
-    public int getFileSize(int Inumber)
-    {
-        return fsize[Inumber];
-    }
-
     public short namei( String filename ) {
         // returns the inumber corresponding to this filename
-        String testString;
-        for (short i = 0; i < fnames.length; i++)
-        {
-            testString = new String(fnames[i]);
-            if (filename.equals(testString))
-            {
+        for (short i = 0; i < fnames.length; i++) {
+            String fname = new String(fnames[i], 0, fsize[i]);
+            if (fsize[i] > 0 && filename.equalsIgnoreCase(fname)) {
                 return i;
             }
         }
         return -1;
     }
+
+//    public short namei( String filename ) {
+//        // returns the inumber corresponding to this filename
+//        String testString;
+//        for (short i = 0; i < fnames.length; i++)
+//        {
+//            testString = new String(fnames[i]);
+//            if (filename.equals(testString))
+//            {
+//                return i;
+//            }
+//        }
+//        return -1;
+//    }
 
     // returns next available iNode that is not used by iterating through the fsize looking for '0' indicating
     // an empty slot.
@@ -142,6 +169,5 @@ public class Directory {
         }
         return -1;
     } // end findNextInode
-
 
 }
