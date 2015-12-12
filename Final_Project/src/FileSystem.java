@@ -211,18 +211,26 @@ public class FileSystem {
             // Loop for reading data from disk, seekPtr must be less than file size, and file must have data
             while (ftEnt.seekPtr < fsize(ftEnt) && (size > 0))
             {
+                // find block that contains data that corresponds with file
                 int currentBlock = findTargetBlock(ftEnt, ftEnt.seekPtr);
+                // if system cannot find block corresponding with file break from loop
                 if (currentBlock == rError)
                 {
                     break;
                 }
+                // block sized buffer for reading in data from disk block
                 byte[] data = new byte[blockSize];
+                // read from disk to data buffer
                 SysLib.rawread(currentBlock, data);
 
+                // keeps track of offset from FileTableEntry seekPtr for location within block
                 int dataOffset = ftEnt.seekPtr % blockSize;
+                // number of blocks left to read into system
                 int blocksLeft = blockSize - itrSize;
+                // number of bytes left to read in from disk
                 int fileLeft = fsize(ftEnt) - ftEnt.seekPtr;
 
+                // check to reset size of
                 if (blocksLeft < fileLeft)
                     itrSize = blocksLeft;
                 else
@@ -231,6 +239,7 @@ public class FileSystem {
                 if (itrSize > size)
                     itrSize = size;
 
+                // copy data from from disk into buffer
                 System.arraycopy(data, dataOffset, buffer, rBuffer, itrSize);
                 rBuffer += itrSize;
                 ftEnt.seekPtr += itrSize;
@@ -240,83 +249,12 @@ public class FileSystem {
         }
     }
 
-//    // Remember that direct links 0-2 are used for stdin, stout, err
-//    int read(FileTableEntry ftEnt, byte[] buffer)
-//    {
-//        // get INode number from FileTableEntry object
-//        int iNumber = ftEnt.iNumber;
-//        ftEnt.seekPtr = 0;
-//        // testing to make sure object is valid
-//        if (ftEnt.mode == "w" || ftEnt.mode == "a" || iNumber == -1)
-//        {
-//            return -1;
-//        }
-//        // assumption that object is valid for read
-//        else
-//        {
-//                    //int fileSize = ftEnt.iNode.fileSize;
-//            // size of block in memory
-//            int blockSize = 512;
-//            // number of address locations in a block
-//            int addInBlock = 256;
-//            // temp buffer for rawread to hold a block, and passed as source to arraycopy
-//            byte readBuffer[] = new byte[blockSize];
-//
-//            //byte addBuffer[] = new byte[address];
-//                    //int maxBufferSize = buffer.length;     // 136,704 bytes max size
-//            // byte tracker for keeping track of position
-//                    //int readSize = 0;
-//            // for loop for iterating through iNode direct pointers
-//            // i = 3 because the first pointer are for stdin, stdout, and err
-//            for (int i = 0; i < ftEnt.iNode.direct.length; i++, ftEnt.seekPtr += blockSize)
-//            {
-//                // if iNode's direct pointer points to block, read in block and copy to buffer
-//                if(ftEnt.iNode.direct[i] != -1)
-//                {
-//                    SysLib.rawread(ftEnt.iNode.direct[i], buffer);
-//                    System.arraycopy(readBuffer, 0, buffer, ftEnt.seekPtr, blockSize);
-//                    ftEnt.seekPtr += blockSize;
-//                }
-//                else
-//                {
-//                    return ftEnt.seekPtr;
-//                }
-//            }
-//            // if iNode's indirect pointer is pointing to block read into buffer
-//            if (ftEnt.iNode.indirect != -1)
-//            {
-//                // tracker for indirect block addresses
-//                int addressPointer = 0;
-//                // int for holding size of address in indirect block
-//                int addressLength = 4;
-//                // buffer for holding address of block from indirect block addresses
-//                byte[] addressBuffer = new byte[blockSize];
-//                // holds address being read from addressBuffer for indirect links
-//                byte[] readAddress = new byte[addressLength];
-//                // reads buffer of 4 bytes into addressBuffer
-//                SysLib.rawread(ftEnt.iNode.indirect, addressBuffer);
-//                // iterator for indirect links, while addressBuffer input is not 0 will iterate
-//                // to next block
-//                for (int i = 0; i < addInBlock; i += addressLength, ftEnt.seekPtr += blockSize)
-//                {
-//                    System.arraycopy(addressBuffer, i, readAddress, 0, addressLength);
-//                    addressPointer = SysLib.bytes2int(readAddress, 0);
-//                    // address block is now equal 0 indicating no more indirect addresses
-//                    if (addressPointer == 0)
-//                    {
-//                        return ftEnt.seekPtr;
-//                    }
-//                    // // reads addressPointer buffer into readBuffer to prepare to be added to buffer
-//                    SysLib.rawread(addressPointer, readBuffer);
-//                    // uses arraycopy to copy readBuffer onto buffer at placement spaceTracker
-//                    System.arraycopy(readBuffer, 0, buffer, ftEnt.seekPtr, blockSize);
-//                }
-//                return ftEnt.seekPtr;
-//            }
-//        } // end else statement
-//        return -1;
-//    }
-
+    /**
+     * findFreeBlock()
+     * Finds a free block in memory by iterating through the freeBlockTable (table of boolean values: True indicates
+     * block is free, False indicates that block is currently has data.  Returns short value that is free block number
+      * @return short indicating free block table
+     */
     short findFreeBlock()
     {
         for(short i = 3; i < freeBlockTable.length; i++)
@@ -331,24 +269,42 @@ public class FileSystem {
         return -1;
     }
 
+    /**
+     *  write(FileTableEntry entry, byte[] buffer)
+     *  Method writes data from memory to disk.  Takes in a FileTableEntry and byte array.  The entry contains
+     *  an inode, and data regarding the files size, mode, and the inode contains pointers for direct and indirect
+     *  addressing to blocks in memory.  This method will fill take data from the buffer and write to disk, and
+     *  record in the inode all block addresses.
+      * @param entry
+     * @param buffer
+     * @return int number of bytes read in from buffer or -1 indicating error in write
+     */
     int write( FileTableEntry entry, byte[] buffer) {
+        // number of bytes written, and will be returned
         int bytesWritten = 0;
+        // length of buffer being passed in, indicating length of file
         int bufferSize = buffer.length;
+        // size of a block of memory, currently 512 bytes
         int blockSize = Disk.blockSize;
 
+        // if mode is read exit method with -1 indicating error
         if (entry == null || entry.mode == "r")
             return -1;
         synchronized (entry)
         {
+            // while buffer has data continue
             while (bufferSize > 0)
             {
+                // variable for holding write location within target block
                 int location = findTargetBlock(entry, entry.seekPtr);
+                // if location is -1 get a new block for writing
                 if (location == -1)
                 {
                     short newLocation = this.findFreeBlock();
 
                     int testPtr = registerTargetBlock(entry, entry.seekPtr, newLocation);
 
+                    // if testPtr = -3 block error return -1
                     if (testPtr == -3)
                     {
                         short freeBlock = this.findFreeBlock();
@@ -362,11 +318,16 @@ public class FileSystem {
                         return -1;
                     location = newLocation;
                 }
+
+                // buffer for holding data read from memory befor pushed to disk
                 byte [] tempBuff = new byte[blockSize];
+                // read memory from memory to temp buffer
                 SysLib.rawread(location, tempBuff);
                 int tempPtr = entry.seekPtr % blockSize;
+                // counter for holding how much more data the block can hold
                 int diff = blockSize - tempPtr;
 
+                // As long as there is more memory in the block than temp buffer write to disk
                 if (diff > bufferSize)
                 {
                     System.arraycopy(buffer, bytesWritten, tempBuff, tempPtr, bufferSize);
@@ -384,6 +345,7 @@ public class FileSystem {
                 }
             }
 
+            // reset FileTableEntry object seek pointer
             if (entry.seekPtr > entry.iNode.fileSize)
             {
                 entry.iNode.fileSize = entry.seekPtr;
@@ -393,121 +355,27 @@ public class FileSystem {
         }
     }
 
-//    int write(FileTableEntry ftEnt, byte[] buffer)
-//    {
-//        synchronized (ftEnt) {
-//            if (ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a") {
-//                // size of block
-//                int blockSize = 512;
-//                int maxBlocks = 267;
-//                if (buffer.length / blockSize > maxBlocks + 1) {
-//                    System.out.println("Error: file size too large");
-//                    return -1;
-//                }
-//
-//                ftEnt.seekPtr = 0;
-//                if (ftEnt.mode == "a") {
-//                    seek(ftEnt, 0, SEEK_END);
-//                } // end if(ftEnt.mode == "a")
-//
-//                // buffer used to write to disk
-//                byte[] writeBuffer = new byte[blockSize];
-//                // indirect Buffer
-//                byte[] indirectBuffer = new byte[blockSize];
-//
-//                int indirectTracker = 0;
-//
-//                for (int blockTracker = 0; blockTracker < (buffer.length / blockSize); blockTracker++) {
-//                    // for 11 direct pointer
-//                    if (blockTracker < 11) {
-//                        ftEnt.iNode.direct[blockTracker] = findFreeBlock();
-//                        System.arraycopy(buffer, ftEnt.seekPtr, writeBuffer, 0, blockSize);
-//                        SysLib.rawwrite(ftEnt.iNode.direct[blockTracker], writeBuffer);
-//                        freeBlockTable[ftEnt.iNode.direct[blockTracker]] = false;
-//                    }
-//                    // sets Inode.indirect pointer to a free block
-//                    if (blockTracker == 11) {
-//                        // setting indirect pointer to a free block
-//                        ftEnt.iNode.indirect = findFreeBlock();
-//                        // set freeBlockTable entry to false
-//                        freeBlockTable[ftEnt.iNode.indirect] = false;
-//                    }
-//                    if (blockTracker >= 11) {
-//                        // find next free block to write from buffer to block indirect points to
-//                        int newBlock = findFreeBlock();
-//                        // from buffer to writeBuffer
-//                        System.arraycopy(buffer, ftEnt.seekPtr, writeBuffer, 0, blockSize);
-//                        // write to disk
-//                        SysLib.rawwrite(newBlock, writeBuffer);
-//
-//                        // write address in bytes of new block to indirectBuffer for holding pointers
-//                        SysLib.int2bytes(newBlock, indirectBuffer, indirectTracker);
-//                        // increment pointer by 4 for int value in bytes
-//                        indirectTracker += 4;
-//                    }
-//                    ftEnt.seekPtr += blockSize;
-//                } // end for()
-//                // write to disk if using indirect block, write buffer of addresses to block indirect points to
-//                if ((buffer.length / blockSize) > 11) {
-//                    SysLib.rawwrite(ftEnt.iNode.indirect, indirectBuffer);
-//                }
-//                    return ftEnt.seekPtr;
-//            } // end else
-//            //  end if(ftEnt.mode == "w" || ftEnt.mode == "w+" || ftEnt.mode == "a")
-//            // mode "r" or incompatible mode types
-//            else {
-//                return -1;
-//            }
-//        }
-//    }
 
+    /**
+     * delete(String filename)
+     * This method takes in a filename and deletes it from system.  Returns True if deleted, else false error
+     * @param filename
+     * @return
+     */
     boolean delete(String filename) {
         FileTableEntry entry = open(filename, "w");
         return close(entry) && directory.ifree(entry.iNumber);
     }
 
-//    boolean delete(String filename)
-//    {
-//        short iNumber = directory.namei(filename);
-//        Inode inode = filetable.getInode(iNumber);
-//        byte[] killer = new byte [512];
-//
-//        //FileTableEntry entry = open(filename, "w");
-//        //short iNumber = directory.namei(filename);
-//        for( int i = 0; i < 11; i++ )
-//        {
-//            if(inode.direct[i] != -1)
-//            {
-//                SysLib.rawwrite(inode.direct[i], killer);
-//            }
-//        }
-//        if (inode.indirect != -1)
-//        {
-//            short blockTracker = 0;
-//            byte[] address = new byte [512];
-//            SysLib.rawread(inode.indirect, address);
-//            for(int i = 0; i < 256; i++, blockTracker +=2)
-//            {
-//                short theAddress = SysLib.bytes2short(address, blockTracker);
-//                if (theAddress > 2)
-//                {
-//                    SysLib.rawwrite(theAddress, killer);
-//                    freeBlockTable[theAddress] = true;
-//                }
-//            }
-//            SysLib.rawwrite(inode.indirect, killer);
-//            freeBlockTable[inode.indirect] = true;
-//        }
-//        if (directory.ifree(directory.namei(filename)))
-//        {
-//            return true;
-//        }
-//        else
-//        {
-//            return false;
-//        }
-//    }
 
+    /**
+     * seek(FileTableEntry ftEnt, int offset, int whence)
+     * This method sets the seek pointer within a FileTableEntry object.
+      * @param ftEnt
+     * @param offset
+     * @param whence
+     * @return int location of seek pointer
+     */
     int seek(FileTableEntry ftEnt, int offset, int whence)
     {
         synchronized (ftEnt) {
@@ -541,18 +409,15 @@ public class FileSystem {
         }
     }
 
-    int blockFormattor(int target)
-    {
-        byte[] format = new byte[512];
-        SysLib.rawwrite(target, format);
-        return target;
-    }
-
-    private boolean deallocAllBlocks(FileTableEntry file)
-    {
-        return  true;
-    }
-
+    /**
+     * registerTargetBlock(FileTableEntry ftEnt, int entry, short offset)
+     * This method adds a block to an inodes pointer if 11 or less blocks added to
+     * direct pointer, if greater than 11 but less than 267 indirect pointer
+      * @param ftEnt
+     * @param entry
+     * @param offset
+     * @return
+     */
     int registerTargetBlock(FileTableEntry ftEnt, int entry, short offset){
         int target = entry/Disk.blockSize;
 
@@ -590,6 +455,14 @@ public class FileSystem {
         return 0;
     }
 
+    /**
+     * registerIndexBlock(FileTableEntry ftEnt, short blockNumber)
+     * This method finds a free block to assign to the 12th direct address pointer in an inode
+     * to be used as an index block for indirect pointers within the inode
+     * @param ftEnt
+     * @param blockNumber
+     * @return true if index block allocated, else return false
+     */
     boolean registerIndexBlock(FileTableEntry ftEnt, short blockNumber){
         for (int i = 0; i < 11; i++){
             if (ftEnt.iNode.direct[i] == -1){
@@ -613,7 +486,14 @@ public class FileSystem {
 
     }
 
-
+    /**
+     * findTargetBlock(FileTableEntry ftEnt, int offset)
+     * This is used to find the address of a target block that is being read from.  If block
+     * is found on disk returns address, else -1 indicating error
+      * @param ftEnt
+     * @param offset
+     * @return int address of block, -1 indicating error
+     */
     int findTargetBlock(FileTableEntry ftEnt, int offset){
         int target = (offset / Disk.blockSize);
 
