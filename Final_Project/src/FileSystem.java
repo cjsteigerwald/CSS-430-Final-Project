@@ -1,6 +1,28 @@
 /**
- * Created by Chris Steigerwald, Hunter Grayson, Michael Voight on 12/6/2015.
+ * @Project: ${PACKAGE_NAME}
+ * @file: ${FILE_NAME}
+ * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @last edit: 12/6/2015
+ *
+ * Description:
+ *
+ *  The "/" root directory maintains each file in a different directory entry that contains its file name
+ *  (in maximum 30 characters = in max. 60 bytes in Java) and the corresponding Inode number. The directory
+ *  receives the maximum number of Inodes to be created, (i.e., thus the max. number of files to be created)
+ *  and keeps track of which Inode numbers (iNumbers) are in use. Since the directory itself is considered as
+ *  a file, its contents are maintained by an Inode, specifically saying Inode 0. This can be located in the
+ *  first 32 bytes of the disk block 1.
+ *
+ *  Upon a boot, the file system instantiates the following Directory class as the root directory through its
+ *  constructor, reads the file from the disk that can be found at Inode 0 (the first 32 bytes of the disk block 1),
+ *  and initializes the Directory instance with the file contents. Upon shutdown, the file system must write back t
+ *  he Directory information onto the disk. The bytes2directory() method will initialize the Directory instance with
+ *  a byte array read from the disk and the directory2bytes() method converts the Directory instance into a byte
+ *  array that can be written back to the disk.
  */
+
+
+
 public class FileSystem {
     private SuperBlock superblock;
     private Directory directory;
@@ -10,6 +32,32 @@ public class FileSystem {
     private final int SEEK_CUR = 1;
     private final int SEEK_END = 2;
 
+
+
+
+    /**
+     * FileSystem(int diskBlocks)
+     * <p>
+     *     The "/" root directory maintains each file in a different directory entry that contains its file name
+     *     (in maximum 30 characters = in max. 60 bytes in Java) and the corresponding Inode number. The directory
+     *     receives the maximum number of Inodes to be created, (i.e., thus the max. number of files to be created)
+     *     and keeps track of which Inode numbers (iNumbers) are in use. Since the directory itself is considered
+     *     as a file, its contents are maintained by an Inode, specifically saying Inode 0. This can be located in
+     *     the first 32 bytes of the disk block 1.
+     * <p>
+     *     Upon a boot, the file system instantiates the following Directory class as the root directory through
+     *     its constructor, reads the file from the disk that can be found at Inode 0 (the first 32 bytes of the
+     *     disk block 1), and initializes the Directory instance with the file contents. Upon shutdown, the file
+     *     system must write back the Directory information onto the disk. The bytes2directory() method will
+     *     initialize the Directory instance with a byte array read from the disk and the directory2bytes()
+     *     method converts the Directory instance into a byte array that can be written back to the disk.
+     * </p>
+     * </p>
+     *     Overloaded constructor takes in the number of diskBlocks and instantiates a virtual file system of passed
+     *     in size and creates and creates a freeBlockTable for tracking free and used blocks within the virtual file
+     *     system.
+     * @param diskBlocks
+     */
     public FileSystem(int diskBlocks) {
         // create superblock, and format disk with 64 inodes in default
         superblock = new SuperBlock(diskBlocks);
@@ -43,6 +91,10 @@ public class FileSystem {
         close(dirEnt);
     } // FileSystem overloaded
 
+    /**
+     * sync
+     * Syncs the cache back to the physical disk.
+     */
     void sync() {
         FileTableEntry ftEnt = this.open("/", "w");
         byte[] data = this.directory.directory2bytes();
@@ -51,6 +103,15 @@ public class FileSystem {
         this.superblock.sync();
     }
 
+    /**
+     * format(int files)
+     * <p>
+     *     Performs a full format of the disk, erases all data and recreates the superblock, directory, and file
+     *     tables.  Once called all data is lost.
+     * </p>
+     * @param files amount of files to be formatted
+     * @return true upon successful format of file system
+     */
     boolean format(int files) {
         superblock.format(files);
         directory = new Directory(superblock.totalInodes);
@@ -58,6 +119,20 @@ public class FileSystem {
         return true;
     }
 
+    /**
+     * open(String filename, String mode)
+     * <p>
+     *     Opens a file with name (filename), using corresponding modes:
+     *              "w+": write/read
+     *              "w": write
+     *              "r": read
+     *              "a": append- write to end of file
+     *     Creates a FileTableEntry object passing in filename and mode to FileTable class to be instantiated.
+     * </p>
+     * @param filename
+     * @param mode
+     * @return FileTableEntry to calling function, null if unsuccessful
+     */
     FileTableEntry open(String filename, String mode) {
         if (mode == "w" || mode == "w+" || mode == "r" || mode == "a")
         {
@@ -70,6 +145,17 @@ public class FileSystem {
         }
     }
 
+    /**
+     * close(FileTableEntry)
+     * <p>
+     *      Closes the the file corresponding to the FileTableEntry that is passed in.  If count (number of threads
+     *      currently using file) is greater than 0, means other threads are currently using file and will not close
+     *      file until count is 0.  Returns true if file is successfully closed.  Using synchronized to protect
+     *      threads from loosing access to file before they finish with it.
+     * </p>
+     * @param ftEnt
+     * @return true is close is successful else false indicating error
+     */
     boolean close(FileTableEntry ftEnt) {
         synchronized (ftEnt)
         {
@@ -83,12 +169,33 @@ public class FileSystem {
         return false;
     }
 
+    /**
+     * fsize(FileTableEntry ftEnt)
+     * <p>
+     *     Returns the file size in bytes of file associated with FileTableEntry passed in
+     * </p>
+     * @param ftEnt
+     * @return int size of file in bytes
+     */
     int fsize(FileTableEntry ftEnt)
     {
         return ftEnt.iNode.fileSize;
     }
 
+    /**
+     * read(FileTableEntry ftEnt, byte[] buffer)
+     * <p>
+     *     Reads into memory the file associated with FileTableEntry passed in and returns the size of the file
+     *     in bytes to calling method.  Mode must be "r" or "w+" indicating read or read/write. If mode of
+     *     FileTableEntry is "w" or "a" error (-1) is returned to calling method.  Using synchronized to allows
+     *     multi-threading and prevents write and append from causing race conditions.
+     * </p>
+     * @param ftEnt
+     * @param buffer
+     * @return int size in bytes of read in file
+     */
     int read(FileTableEntry ftEnt, byte[] buffer) { // TODO
+        // if write or append return error
         if ((ftEnt.mode == "w") || (ftEnt.mode == "a"))
             return -1;
 
@@ -98,8 +205,10 @@ public class FileSystem {
         int blockSize = 512;
         int itrSize = 0;
 
+        // FileTableEntry object is synchronized to prevent multiple threads access congruently
         synchronized(ftEnt)
         {
+            // Loop for reading data from disk, seekPtr must be less than file size, and file must have data
             while (ftEnt.seekPtr < fsize(ftEnt) && (size > 0))
             {
                 int currentBlock = findTargetBlock(ftEnt, ftEnt.seekPtr);
