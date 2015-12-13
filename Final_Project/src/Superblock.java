@@ -1,7 +1,7 @@
 /**
  * @Project: ${PACKAGE_NAME}
  * @file: ${FILE_NAME}
- * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @author: Hunter Grayson, Chris Steigerwald, Michael Voight
  * @last edit: 12/6/2015
  *
  * The first block, block 0, is called the superblock.  It is used to describe
@@ -13,8 +13,8 @@
  * get access to the superblock
  */
 
-
-class SuperBlock {
+class SuperBlock
+{
     public int totalBlocks;                     // the number of disk blocks
     public int totalInodes;                     // the number of inodes
     public int freeList;                        // the block number of the free list's head
@@ -24,22 +24,16 @@ class SuperBlock {
      * Overloaded SuperBlock() passes in the number of blocks to be instantiated and sets variables to their values.
      * @param blockAmount
      */
-    public SuperBlock(int blockAmount) {
+    public SuperBlock(int blockAmount)
+    {
         byte[] theSuperBlock = new byte[Disk.blockSize];
         SysLib.rawread(0, theSuperBlock);
         totalBlocks = SysLib.bytes2int(theSuperBlock, 0);
         totalInodes = SysLib.bytes2int(theSuperBlock, 4);
         freeList = SysLib.bytes2int(theSuperBlock, 8);
         totalInodes = totalBlocks;
-        if (totalBlocks == blockAmount && totalInodes > totalBlocks && freeList >= 2)
-        {
-            return;
-        }
-        else
-        {
-            totalBlocks = blockAmount;
-            format(64);
-        }
+        totalBlocks = blockAmount;
+        format(64);
     }
 
     /**

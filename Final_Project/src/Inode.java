@@ -16,13 +16,14 @@
  * of the indirect index block.  The indirect index block stores all addresses congruently as shorts pointing to
  * addresses to blocks targeted by this inode. If no block is targeted short is 0
  */
+
 public class Inode {
     private final static int iNodeSize = 32;       // fix to 32 bytes
     private final static int directSize = 11;      // # direct pointers
-    private final static int maxBytes = 512;       // size of a block in bytes
-    private final static int blockSize = 16;       // number of inodes per block
-    private final static int intBlock = 4;         // size of int in bytes
-    private final static int shortBlock = 2;       // size of short in bytes
+    private final static int maxBytes = 512;
+    private final static int blockSize = 16;
+    private final static int intBlock = 4;
+    private final static int shortBlock = 2;
 
     public int fileSize;                           // file size in bytes
     public short count;                            // # file-table entries pointing to this, 0 for deletion
@@ -76,7 +77,7 @@ public class Inode {
      * toDisk(short iNumber)
      * Method saves inode to disk. Takes in passed iNumber and reads from memory and stores to disk then returns the
      * block that inode is saved in.
-      * @param iNumber
+     * @param iNumber
      * @return int block is the block number this inode is saved at
      */
     int toDisk( short iNumber )                     // save to disk as the i-th iNode

@@ -11,6 +11,7 @@
  *      count: # threads sharing this entry
  *      mode: "r" read, "w" write, "w+" write/read, "a" append to end of file, once set never changes
  */
+
 public class FileTableEntry
 {
     public int seekPtr;
@@ -22,16 +23,16 @@ public class FileTableEntry
     /**
      * FileTableEntry ( Inode i, short iNumber, String m )
      * Overloaded FileTableEntry- sets class variables and objects to values passed in.
-     * @param i
+     * @param iNode
      * @param iNumber
-     * @param m
+     * @param mode
      */
-    public FileTableEntry ( Inode i, short iNumber, String m ) {
+    public FileTableEntry ( Inode iNode, short iNumber, String mode ) {
         this.seekPtr = 0;
-        this.iNode = i;
+        this.iNode = iNode;
         this.iNumber = iNumber;
         this.count = 1;
-        this.mode = m;
+        this.mode = mode;
         if ( mode.compareTo( "a" ) == 0 )
             seekPtr = iNode.fileSize;
     }

@@ -110,11 +110,11 @@ public class SysLib {
     }
 
     public static int format(int files) {
-        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.FORMAT, files, (Object)null);
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.FORMAT, files, null);
     }
 
     public static int fsize(int fd){
-        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.SIZE, fd, (Object)null);
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.SIZE, fd, null);
     }
 
     public static String[] stringToArgs( String s ) {

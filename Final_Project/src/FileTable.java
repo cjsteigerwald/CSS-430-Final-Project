@@ -3,7 +3,7 @@ import java.util.Vector;
 /**
  * @Project: ${PACKAGE_NAME}
  * @file: ${FILE_NAME}
- * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @author: Hunter Grayson, Chris Steigerwald, Michael Voight
  * @last edit: 12/6/2015
  *
  * The file system maintains the file (structure) table shared among all user threads.  When a user thread opens
@@ -21,7 +21,7 @@ import java.util.Vector;
 
 public class FileTable
 {
-    private Vector <FileTableEntry> table;          // the actual entity of this file table
+    private Vector table;                           // the actual entity of this file table
     private Directory directory;                    // the root directory
 
     /**

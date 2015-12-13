@@ -1,7 +1,7 @@
 /**
  * @Project: ${PACKAGE_NAME}
  * @file: ${FILE_NAME}
- * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @author: Chris Steigerwald, Hunter Grayson, Chris Steigerwald, Michael Voight
  * @last edit: 12/6/2015
  *
  * The "/" root directory maintains each file in a different directory entry that contains its file name
@@ -92,8 +92,7 @@ public class Directory
         {
             String theName = new String(fileName[i], 0, fileSize[i]);
             byte[] nameHolder = theName.getBytes();
-            for (int j = 0; j < nameHolder.length; j++)
-                directoryBytes[offset + j] = nameHolder[j];
+            System.arraycopy(nameHolder, 0, directoryBytes, offset, nameHolder.length);
             offset += (maxChars * 2);
         }
         return directoryBytes;

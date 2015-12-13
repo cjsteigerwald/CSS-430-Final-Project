@@ -83,7 +83,7 @@ public class Kernel {
                         disk.start();
 
                         // instantiate a cache memory
-                        cache = new Cache(disk.blockSize, 10);
+                        cache = new Cache(Disk.blockSize, 10);
 
                         // instantiate synchronized queues
                         ioQueue = new SyncQueue();
@@ -95,7 +95,7 @@ public class Kernel {
                     case WAIT:
                         if ((myTcb = scheduler.getMyTcb()) != null) {
                             int myTid = myTcb.getTid(); // get my thread ID
-                            return waitQueue.enqueueAndSleep(myTid); //wait on my tid
+                            return waitQueue.enqueueAndSleep(myTid); // wait on my tid
                             // woken up by my child thread
                         }
                         return ERROR;
@@ -118,9 +118,9 @@ public class Kernel {
                         return OK;
                     case RAWREAD:
                         // read a block of data from disk
-                        while (disk.read(param, (byte[]) args) == false)
+                        while (!disk.read(param, (byte[]) args))
                             ioQueue.enqueueAndSleep(COND_DISK_REQ);
-                        while (disk.testAndResetReady() == false)
+                        while (!disk.testAndResetReady())
                             ioQueue.enqueueAndSleep(COND_DISK_FIN);
 
                         // it's possible that a thread waiting to make a request was released by the disk,
@@ -132,9 +132,9 @@ public class Kernel {
                         return OK;
                     case RAWWRITE:
                         // write a block of data to disk
-                        while (disk.write(param, (byte[]) args) == false)
+                        while (!disk.write(param, (byte[]) args))
                             ioQueue.enqueueAndSleep(COND_DISK_REQ);
-                        while (disk.testAndResetReady() == false)
+                        while (!disk.testAndResetReady())
                             ioQueue.enqueueAndSleep(COND_DISK_FIN);
                         // it's possible that a thread waiting to make a request was released by the disk,
                         // but then promptly looped back, found the buffer wasn't available for sending (bufferReady == true)
@@ -144,9 +144,9 @@ public class Kernel {
                         return OK;
                     case SYNC:
                         // synchronize disk data to a real file
-                        while (disk.sync() == false)
+                        while (!disk.sync())
                             ioQueue.enqueueAndSleep(COND_DISK_REQ);
-                        while (disk.testAndResetReady() == false)
+                        while (!disk.testAndResetReady())
                             ioQueue.enqueueAndSleep(COND_DISK_FIN);
 
                         // it's possible that a thread waiting to make a request was released by the disk,
@@ -159,14 +159,12 @@ public class Kernel {
                             case STDIN:
                                 try {
                                     String s = input.readLine(); // read a keyboard input
-                                    if (s == null) {
-                                        return ERROR;
-                                    }
+                                    if (s == null) return ERROR;
                                     // prepare a read buffer
-                                    StringBuffer buf = (StringBuffer) args;
+                                    StringBuffer buffer = (StringBuffer) args;
 
                                     // append the keyboard input to this read buffer
-                                    buf.append(s);
+                                    buffer.append(s);
 
                                     // return the number of chars read from keyboard
                                     return s.length();
@@ -292,7 +290,7 @@ public class Kernel {
     // Spawning a new thread
     private static int sysExec(String args[]) {
         String thrName = args[0]; // args[0] has a thread name
-        Object thrObj = null;
+        Object thrObj;
 
         try {
             //get the user thread class from its name
