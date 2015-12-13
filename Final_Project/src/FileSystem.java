@@ -3,22 +3,19 @@
  * @file: ${FILE_NAME}
  * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
  * @last edit: 12/6/2015
- *
- * Description:
- *
- *  The "/" root directory maintains each file in a different directory entry that contains its file name
- *  (in maximum 30 characters = in max. 60 bytes in Java) and the corresponding Inode number. The directory
- *  receives the maximum number of Inodes to be created, (i.e., thus the max. number of files to be created)
- *  and keeps track of which Inode numbers (iNumbers) are in use. Since the directory itself is considered as
- *  a file, its contents are maintained by an Inode, specifically saying Inode 0. This can be located in the
- *  first 32 bytes of the disk block 1.
- *
- *  Upon a boot, the file system instantiates the following Directory class as the root directory through its
- *  constructor, reads the file from the disk that can be found at Inode 0 (the first 32 bytes of the disk block 1),
- *  and initializes the Directory instance with the file contents. Upon shutdown, the file system must write back t
- *  he Directory information onto the disk. The bytes2directory() method will initialize the Directory instance with
- *  a byte array read from the disk and the directory2bytes() method converts the Directory instance into a byte
- *  array that can be written back to the disk.
+ * The "/" root directory maintains each file in a different directory entry that contains its file name
+ *     (in maximum 30 characters = in max. 60 bytes in Java) and the corresponding Inode number. The directory
+ *     receives the maximum number of Inodes to be created, (i.e., thus the max. number of files to be created)
+ *     and keeps track of which Inode numbers (iNumbers) are in use. Since the directory itself is considered
+ *     as a file, its contents are maintained by an Inode, specifically saying Inode 0. This can be located in
+ *     the first 32 bytes of the disk block 1.
+ * 
+ *     Upon a boot, the file system instantiates the following Directory class as the root directory through
+ *     its constructor, reads the file from the disk that can be found at Inode 0 (the first 32 bytes of the
+ *     disk block 1), and initializes the Directory instance with the file contents. Upon shutdown, the file
+ *     system must write back the Directory information onto the disk. The bytes2directory() method will
+ *     initialize the Directory instance with a byte array read from the disk and the directory2bytes()
+ *     method converts the Directory instance into a byte array that can be written back to the disk.
  */
 
 
@@ -37,21 +34,6 @@ public class FileSystem {
 
     /**
      * FileSystem(int diskBlocks)
-     * <p>
-     *     The "/" root directory maintains each file in a different directory entry that contains its file name
-     *     (in maximum 30 characters = in max. 60 bytes in Java) and the corresponding Inode number. The directory
-     *     receives the maximum number of Inodes to be created, (i.e., thus the max. number of files to be created)
-     *     and keeps track of which Inode numbers (iNumbers) are in use. Since the directory itself is considered
-     *     as a file, its contents are maintained by an Inode, specifically saying Inode 0. This can be located in
-     *     the first 32 bytes of the disk block 1.
-     * <p>
-     *     Upon a boot, the file system instantiates the following Directory class as the root directory through
-     *     its constructor, reads the file from the disk that can be found at Inode 0 (the first 32 bytes of the
-     *     disk block 1), and initializes the Directory instance with the file contents. Upon shutdown, the file
-     *     system must write back the Directory information onto the disk. The bytes2directory() method will
-     *     initialize the Directory instance with a byte array read from the disk and the directory2bytes()
-     *     method converts the Directory instance into a byte array that can be written back to the disk.
-     * </p>
      * </p>
      *     Overloaded constructor takes in the number of diskBlocks and instantiates a virtual file system of passed
      *     in size and creates and creates a freeBlockTable for tracking free and used blocks within the virtual file
