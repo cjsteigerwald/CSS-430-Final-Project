@@ -1,17 +1,38 @@
+/**
+ * @Project: ${PACKAGE_NAME}
+ * @file: ${FILE_NAME}
+ * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @last edit: 12/6/2015
+ *
+ * This is an Entry for FileTable (struct) that holds the following items:
+ *      seekPtr: a file seek pointer
+ *      iNode: a reference to its inode
+ *      iNumber: this inode number
+ *      count: # threads sharing this entry
+ *      mode: "r" read, "w" write, "w+" write/read, "a" append to end of file, once set never changes
+ */
+public class FileTableEntry
+{
+    public int seekPtr;
+    public final Inode iNode;
+    public final short iNumber;
+    public int count;
+    public final String mode;
 
-public class FileTableEntry {          // Each table entry should have
-    public int seekPtr;                 //    a file seek pointer
-    public final Inode iNode;           //    a reference to its inode
-    public final short iNumber;         //    this inode number
-    public int count;                   //    # threads sharing this entry
-    public final String mode;           //    "r", "w", "w+", or "a"
-    public FileTableEntry ( Inode i, short inumber, String m ) {
-        seekPtr = 0;             // the seek pointer is set to the file top
-        iNode = i;
-        iNumber = inumber;
-        count = 1;               // at least on thread is using this entry
-        mode = m;                // once access mode is set, it never changes
-        if ( mode.compareTo( "a" ) == 0 ) // if mode is append,
-            seekPtr = iNode.fileSize;        // seekPtr points to the end of file
+    /**
+     * FileTableEntry ( Inode i, short iNumber, String m )
+     * Overloaded FileTableEntry- sets class variables and objects to values passed in.
+     * @param i
+     * @param iNumber
+     * @param m
+     */
+    public FileTableEntry ( Inode i, short iNumber, String m ) {
+        this.seekPtr = 0;
+        this.iNode = i;
+        this.iNumber = iNumber;
+        this.count = 1;
+        this.mode = m;
+        if ( mode.compareTo( "a" ) == 0 )
+            seekPtr = iNode.fileSize;
     }
 }
