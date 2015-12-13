@@ -1,103 +1,86 @@
+/**
+ * @Project: ${PACKAGE_NAME}
+ * @file: ${FILE_NAME}
+ * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @last edit: 12/6/2015
+ *
+ * The first block, block 0, is called the superblock.  It is used to describe
+ *      1. The number of disk blocks.
+ *      2. The number of inodes
+ *      3. The block number of the head block of the free list.
+ *
+ * It is the OS-managed block. No other information must be recorded in and no user threads must be able to
+ * get access to the superblock
+ */
+
+
 class SuperBlock {
-    public int totalBlocks; // the number of disk blocks
-    public int totalInodes; // the number of inodes
-    public int freeList;    // the block number of the free list's head
+    public int totalBlocks;                     // the number of disk blocks
+    public int totalInodes;                     // the number of inodes
+    public int freeList;                        // the block number of the free list's head
 
-
-    public SuperBlock(int num) {
-        byte[] blk = new byte[Disk.blockSize];
-        SysLib.rawread(0, blk);
-        totalBlocks = SysLib.bytes2int(blk, 0);
-        totalInodes = SysLib.bytes2int(blk, 4);
-        freeList = SysLib.bytes2int(blk, 8);
+    /**
+     * SuperBlock(int blockAmount)
+     * Overloaded SuperBlock() passes in the number of blocks to be instantiated and sets variables to their values.
+     * @param blockAmount
+     */
+    public SuperBlock(int blockAmount) {
+        byte[] theSuperBlock = new byte[Disk.blockSize];
+        SysLib.rawread(0, theSuperBlock);
+        totalBlocks = SysLib.bytes2int(theSuperBlock, 0);
+        totalInodes = SysLib.bytes2int(theSuperBlock, 4);
+        freeList = SysLib.bytes2int(theSuperBlock, 8);
         totalInodes = totalBlocks;
-        if (totalBlocks == num && totalInodes > totalBlocks && freeList >= 2){
+        if (totalBlocks == blockAmount && totalInodes > totalBlocks && freeList >= 2)
+        {
             return;
         }
         else
         {
-            totalBlocks = num;
+            totalBlocks = blockAmount;
             format(64);
         }
     }
-//    public SuperBlock( int diskSize ) {
-//        // read data from disk
-//        byte[] sbData = new byte[Disk.blockSize];
-//        SysLib.rawread(0, sbData);
-//
-//        totalBlocks = SysLib.bytes2int(sbData, 0);
-//        totalInodes = SysLib.bytes2int(sbData, 4);
-//        freeList = SysLib.bytes2int(sbData, 8);
-//
-//        // check disk contents for problems. If problem, format disk
-//        if(this.totalBlocks != diskSize || this.totalInodes <= 0 || this.freeList >= 2) {
-//            SysLib.cerr("Error: Initializing Superblock, formatting disk!");
-//            this.totalBlocks = diskSize;
-//            format();
-//        }
-//    }
 
-    // format disk with number of Inodes
-   // public synchronized void format() {
-     //   this.format(64);
-   // }
-
-//    public synchronized void format(int iNodes) {
-//        this.totalInodes = iNodes;
-//
-//        // set freeList pointer to first free block
-//        this.freeList = ((this.totalInodes * 32) / Disk.blockSize) + 2;
-//
-//        // write Superblock contents to disk
-//        for( int i = this.freeList; i < this.totalBlocks; i++ ) {
-//            byte[] data = new byte[Disk.blockSize];
-//            // remove data
-//            for( int j = 0; j < Disk.blockSize; j++ ) {
-//                data[j] = 0;
-//            }
-//
-//            SysLib.int2bytes(i + 1, data, 0);
-//            SysLib.rawwrite(i, data); // save to disk
-//        }
-//
-//        this.sync();
-//    }
-
-    void format(int var1) {
-        this.totalInodes = var1;
-
-        for(short var2 = 0; var2 < this.totalInodes; ++var2) {
-            Inode var3 = new Inode();
-            var3.usedFlag = 0;
-            var3.toDisk(var2);
+    /**
+     * format(int nodeAmount)
+     * This method takes in the number of nodes in the system and formats the blocks, cannot be undone.  Sets all
+     * blocks to free.
+     * @param nodeAmount
+     */
+    void format(int nodeAmount)
+    {
+        this.totalInodes = nodeAmount;
+        for(short i = 0; i < this.totalInodes; i++)
+        {
+            Inode newInode = new Inode();
+            newInode.usedFlag = 0;
+            newInode.toDisk(i);
         }
-
         this.freeList = 2 + this.totalInodes * 32 / 512;
-
-        for(int var5 = this.freeList; var5 < this.totalBlocks; ++var5) {
-            byte[] var6 = new byte[512];
-
-            for(int var4 = 0; var4 < 512; ++var4) {
-                var6[var4] = 0;
+        for(int i = this.freeList; i < this.totalBlocks; i++)
+        {
+            byte[] theBlock = new byte[512];
+            for(int j = 0; j < 512; j++)
+            {
+                theBlock[j] = 0;
             }
-
-            SysLib.int2bytes(var5 + 1, var6, 0);
-            SysLib.rawwrite(var5, var6);
+            SysLib.int2bytes(i + 1, theBlock, 0);
+            SysLib.rawwrite(i, theBlock);
         }
-
         this.sync();
     }
 
-    void sync() {
-        // create buffer
-        byte rawData[] = new byte[Disk.blockSize];
-
-        // save Superblock data
-        SysLib.int2bytes(this.totalBlocks, rawData, 0);
-        SysLib.int2bytes(this.totalInodes, rawData, 4);
-        SysLib.int2bytes(this.freeList, rawData, 8);
-
-        // write Superblock data to disk
-        SysLib.rawwrite(0, rawData);
+    /**
+     * sync()
+     * Syncs the cache back to the physical disk.
+     */
+    void sync()
+    {
+        byte data[] = new byte[Disk.blockSize];
+        SysLib.int2bytes(this.totalBlocks, data, 0);
+        SysLib.int2bytes(this.totalInodes, data, 4);
+        SysLib.int2bytes(this.freeList, data, 8);
+        SysLib.rawwrite(0, data);
     }
 }
