@@ -1,109 +1,117 @@
+/**
+ * @Project: ${PACKAGE_NAME}
+ * @file: ${FILE_NAME}
+ * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @last edit: 12/6/2015
+ *
+ * The "/" root directory maintains each file in a different directory entry that contains its file name
+ * (in maximum 30 characters = in max. 60 bytes in Java) and the corresponding Inode number. The directory
+ * receives the maximum number of Inodes to be created, (i.e., thus the max. number of files to be created)
+ * and keeps track of which Inode numbers (iNumbers) are in use. Since the directory itself is considered as
+ * a file, its contents are maintained by an Inode, specifically saying Inode 0. This can be located in the
+ * first 32 bytes of the disk block 1.
+ *
+ * Upon a boot, the file system instantiates the following Directory class as the root directory through its
+ * constructor, reads the file from the disk that can be found at Inode 0 (the first 32 bytes of the disk block 1),
+ * and initializes the Directory instance with the file contents. Upon shutdown, the file system must write back
+ * the Directory information onto the disk. The bytes2directory() method will initialize the Directory instance
+ * with a byte array read from the disk and the directory2bytes() method converts the Directory instance into a
+ * byte array that can be written back to the disk.
+ *
+ */
 
-public class Directory {
+/**
+ * Directory class
+ */
+public class Directory
+{
     private static int maxChars = 30; // max characters of each file name
+    private int fileSize[];
+    private char fileName[][];
 
-    // Directory entries
-    private int fsize[];        // each element stores a different file size.
-    private char fnames[][];    // each element stores a different file name.
-
-    public Directory( int maxInumber ) { // directory constructor
-        fsize = new int[maxInumber];     // maxInumber = max files
+    /**
+     * Directory( int maxInumber )
+     * Default constructor for Directory class takes in the maximum number of inodes and instantiates two arrays:
+     *          fileSize: an array to hold size of files read in
+     *          fileName: an array for holding file name
+     * These arrays correspond to the inode number
+     * @param maxInumber
+     */
+    public Directory( int maxInumber )
+    {
+        fileSize = new int[maxInumber];
         for ( int i = 0; i < maxInumber; i++ )
-            fsize[i] = 0;                 // all file size initialized to 0
-        fnames = new char[maxInumber][maxChars];
-        String root = "/";                // entry(inode) 0 is "/"
-        fsize[0] = root.length( );        // fsize[0] is the size of "/".
-        root.getChars( 0, fsize[0], fnames[0], 0 ); // fnames[0] includes "/"
+            fileSize[i] = 0;
+        fileName = new char[maxInumber][maxChars];
+        String root = "/";
+        fileSize[0] = root.length( );
+        root.getChars( 0, fileSize[0], fileName[0], 0 );
     }
 
-    public int bytes2directory( byte data[] ) {
-        // assumes data[] received directory information from disk
-        // initializes the Directory instance with this data[]
+    /**
+     * bytes2directory( byte byteData[] )
+     * Assumes data[] received directory information from disk initializes the Directory instance with this data
+     * @param byteData
+     * @return int returns 0 upon success
+     */
+    public int bytes2directory( byte byteData[] )
+    {
         int set = 0;
-        for (int i = 0; i < fnames.length; i++)
+        for (int i = 0; i < fileName.length; i++)
         {
             set = i * 4;
-            fsize[i] = SysLib.bytes2int(data, set);
+            fileSize[i] = SysLib.bytes2int(byteData, set);
         }
         set += 4;
-        for (int i = 0; i < fnames.length; i++) {
-            String fname = new String(data, set + (i * (maxChars * 2)), maxChars * 2);
-            for (int j = 0; j < fsize[i]; j++) {
-                fnames[i][j] = fname.charAt(j);
-            }
+        for (int i = 0; i < fileName.length; i++)
+        {
+            String name = new String(byteData, set + (i * (2 * maxChars)), 2 * maxChars);
+            for (int j = 0; j < fileSize[i]; j++)
+                fileName[i][j] = name.charAt(j);
         }
         return 0;
     }
 
-    public byte[] directory2bytes( ) {
-        // converts and return Directory information into a plain byte array
-        // this byte array will be written back to disk
-        // note: only meaningfull directory information should be converted
-        // into bytes.
-        byte[] tempReturn = new byte[(fnames.length * 4) + (fnames.length * (maxChars * 2))];
+    /**
+     * directory2bytes()
+     * Converts Directory information into a plain bute array and returns it
+     * this byte array will be written back to disk
+     * note: only meaning ful directory information should be converted into bytes
+     * @return byte[] array of byte data that is the directory
+     */
+    public byte[] directory2bytes( )
+    {
+        byte[] directoryBytes = new byte[(4 * fileName.length) + (fileName.length * (2 * maxChars))];
         int offset = 0;
-        for (int i = 0; i < fnames.length; i++) {
-            SysLib.int2bytes(fsize[i], tempReturn, offset);
+        for (int i = 0; i < fileName.length; i++)
+        {
+            SysLib.int2bytes(fileSize[i], directoryBytes, offset);
             offset += 4;
         }
-        for (int i = 0; i < fnames.length; i++) {
-            String fname = new String(fnames[i], 0, fsize[i]);
-            byte[] tempFname = fname.getBytes();
-            for (int j = 0; j < tempFname.length; j++) {
-                tempReturn[offset + j] = tempFname[j];
-            }
+        for (int i = 0; i < fileName.length; i++)
+        {
+            String theName = new String(fileName[i], 0, fileSize[i]);
+            byte[] nameHolder = theName.getBytes();
+            for (int j = 0; j < nameHolder.length; j++)
+                directoryBytes[offset + j] = nameHolder[j];
             offset += (maxChars * 2);
         }
-        return tempReturn;
+        return directoryBytes;
     }
 
-//    public int bytes2directory( byte data[] ) {
-//        // assumes data[] received directory information from disk
-//        // initializes the Directory instance with this data[]
-//        int spaceTracker;
-//        int i = 0;
-//        for (spaceTracker = 0; spaceTracker < fsize.length; spaceTracker += 4, i++)
-//        {
-//            fsize[i] = SysLib.bytes2int(data, spaceTracker);
-//        }
-//        i = 0;
-//        String theString;
-//        for ( ; spaceTracker < data.length; spaceTracker += maxChars, i++ )
-//        {
-//            theString = new String(data,spaceTracker, maxChars);
-//            fnames[i] = theString.toCharArray();
-//        }
-//        return 0;
-//    }
-//
-//    public byte[] directory2bytes( ) {
-//        // converts and return Directory information into a plain byte array
-//        // this byte array will be written back to disk
-//        // note: only meaningfull directory information should be converted
-//        // into bytes.
-//        byte[] data = new byte [(fsize.length * 4) + (fnames.length * 30)];
-//        int spaceTracker = 0;
-//        for (int i = 0; i < fsize.length; i++, spaceTracker += 4)
-//        {
-//            SysLib.int2bytes(fsize[i], data, spaceTracker);
-//        }
-//        for (int i = 0; i < fnames.length; i++, spaceTracker += maxChars)
-//        {
-//            String theString = new String(fnames[i], 0, fsize[i]);
-//            byte[] string2Bytes = theString.getBytes();
-//            System.arraycopy(data, spaceTracker, string2Bytes, 0, maxChars);
-//        }
-//        return data;
-//    }
-
-    public short ialloc( String filename ) {
-        // filename is the one of a file to be created.
-        // allocates a new inode number for this filename
-        for (int i = 0; i < fnames.length; i++) {
-            if (fsize[i] == 0) {
-                fsize[i] = filename.length();
-                for (int j = 0; j < fsize[i]; j++) {
-                    fnames[i][j] = filename.charAt(j);
+    /**
+     * The name is the filename of a file to be created. Allocates a new inode number for this filename
+     * @param name
+     * @return short returns inode number associated with filename upon success, else 0 is failure
+     */
+    public short iAlloc( String name )
+    {
+        for (int i = 0; i < fileName.length; i++) {
+            if (fileSize[i] == 0) {
+                fileSize[i] = name.length();
+                for (int j = 0; j < fileSize[i]; j++)
+                {
+                    fileName[i][j] = name.charAt(j);
                 }
                 return (short)i;
             }
@@ -111,63 +119,45 @@ public class Directory {
         return 0;
     }
 
-    public boolean ifree( short iNumber ) {
-        // deallocates this inumber (inode number)
-        // the corresponding file will be deleted.
-        if (iNumber > fsize.length || iNumber < 0 || fsize[iNumber] == 0)
+    /**
+     * iFree(short iNumber)
+     * This method frees an inode from disk allowing it to be reused by the system
+     * @param iNumber
+     * @return boolean True is inode freed, else false is failure
+     */
+    public boolean iFree( short iNumber )
+    {
+        if (iNumber > fileSize.length || iNumber < 0 || fileSize[iNumber] == 0)
         {
             return false;
         }
         else
         {
-            fsize[iNumber] = 0;
-            fnames[iNumber][0] = '0';
+            fileSize[iNumber] = 0;
+            fileName[iNumber][0] = '0';
             for (int i = 0; i < maxChars; i++)
             {
-                fnames[iNumber][i] = '0';
+                fileName[iNumber][i] = '0';
             }
             return true;
         }
     }
 
-    public short namei( String filename ) {
-        // returns the inumber corresponding to this filename
-        for (short i = 0; i < fnames.length; i++) {
-            String fname = new String(fnames[i], 0, fsize[i]);
-            if (fsize[i] > 0 && filename.equalsIgnoreCase(fname)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-//    public short namei( String filename ) {
-//        // returns the inumber corresponding to this filename
-//        String testString;
-//        for (short i = 0; i < fnames.length; i++)
-//        {
-//            testString = new String(fnames[i]);
-//            if (filename.equals(testString))
-//            {
-//                return i;
-//            }
-//        }
-//        return -1;
-//    }
-
-    // returns next available iNode that is not used by iterating through the fsize looking for '0' indicating
-    // an empty slot.
-    // returns short : value of iNode
-    public short findNextInode ()
+    /**
+     * namei(String name)
+     * returns the inumber corresponding to this filename
+     * @param name
+     * @return
+     */
+    public short namei( String name )
     {
-        for (short i = 0; i < fnames.length; i++)
-        {
-            if (fsize[i] == 0)
+        for (short i = 0; i < fileName.length; i++) {
+            String testedName = new String(fileName[i], 0, fileSize[i]);
+            if (fileSize[i] > 0 && name.equalsIgnoreCase(testedName))
             {
                 return i;
             }
         }
         return -1;
-    } // end findNextInode
-
+    }
 }

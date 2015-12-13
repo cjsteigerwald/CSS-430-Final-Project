@@ -364,7 +364,7 @@ public class FileSystem {
      */
     boolean delete(String filename) {
         FileTableEntry entry = open(filename, "w");
-        return close(entry) && directory.ifree(entry.iNumber);
+        return close(entry) && directory.iFree(entry.iNumber);
     }
 
 

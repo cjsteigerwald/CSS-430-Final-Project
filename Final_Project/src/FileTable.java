@@ -55,7 +55,7 @@ public class FileTable {
                     }
                 }
             } else if (!mode.equals("r")) {
-                iNumber = dir.ialloc(filename);
+                iNumber = dir.iAlloc(filename);
                 inode = new Inode(iNumber);
                 inode.usedFlag = 3;
                 break;
