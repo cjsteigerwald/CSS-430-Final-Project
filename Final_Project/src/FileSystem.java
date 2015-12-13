@@ -136,7 +136,7 @@ public class FileSystem {
     FileTableEntry open(String filename, String mode) {
         if (mode == "w" || mode == "w+" || mode == "r" || mode == "a")
         {
-            FileTableEntry entry = filetable.falloc(filename, mode);
+            FileTableEntry entry = filetable.fAlloc(filename, mode);
             return entry;
         }
         else
@@ -163,7 +163,7 @@ public class FileSystem {
         }
         if (ftEnt.count == 0)
         {
-            filetable.ffree(ftEnt);
+            filetable.fFree(ftEnt);
             return true;
         }
         return false;

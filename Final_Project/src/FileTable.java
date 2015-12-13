@@ -1,86 +1,130 @@
 import java.util.Vector;
 
 /**
- * Created by Chris on 12/8/2015.
+ * @Project: ${PACKAGE_NAME}
+ * @file: ${FILE_NAME}
+ * @author: Chris Steigerwald, Hunter Grayson, Michael Voight
+ * @last edit: 12/6/2015
+ *
+ * The file system maintains the file (structure) table shared among all user threads.  When a user thread opens
+ * a file, it follows the sequence listed below.
+ *  1. The user thread allocates a new entry of the user file descriptor table in its TCB. This entry number itself
+ *      becomes a file descriptor number. The entry maintains a reference to a file (structure) table entry.
+ *  2. The user thread then requests the file system to allocate a new entry of the system-maintained file
+ *      (structure) table. This entry includes the seek pointer of this file, a reference to the inode corresponding
+ *      to the file, the inode number, the count to maintain #threads sharing this file depending on the file
+ *      access mode.
+ *  3. The file system locates the corresponding inode and records it in this file (structure) table entry.
+ *  4. The user thread finally registers a reference to this file (structure) table entry in its file descriptor
+ *      table entry of the TCB.
  */
-public class FileTable {
 
-    private Vector <FileTableEntry> table;         // the actual entity of this file table
-    private Directory dir;        // the root directory
+public class FileTable
+{
+    private Vector <FileTableEntry> table;          // the actual entity of this file table
+    private Directory directory;                    // the root directory
 
-    public FileTable( Directory directory ) { // constructor
-        table = new Vector( );     // instantiate a file (structure) table
-        dir = directory;           // receive a reference to the Director
-    }                             // from the file system
+    /**
+     * FileTable( Directory directory )
+     * Overloaded constructor for FileTable() takes in and instantiates a vector for FileTableEntry's and a directory
+     * @param directory
+     */
+    public FileTable( Directory directory )
+    {                                               // constructor
+        table = new Vector( );                      // instantiate a file (structure) table
+        this.directory = directory;                 // receive a reference to the Director
+    }                                               // from the file system
 
-    // major public methods
-    public synchronized FileTableEntry falloc( String filename, String mode ) {
-        // allocate a new file (structure) table entry for this file name
-        // allocate/retrieve and register the corresponding inode using dir
-        // increment this inode's count
-        // immediately write back this inode to the disk
-        // return a reference to this file (structure) table entry
+    /**
+     * fAlloc( String filename, String mode )
+     * This method allocates a new file (structure) table entry for this file name
+     * Allocate/retrieve and register the corresponding inode using directory
+     * Increment this inode's count
+     * Immediately writes back this inode to disk
+     * @param filename
+     * @param mode
+     * @return FileTableEntry if success returns a FileTableEntry object, else null if error
+     */
+    public synchronized FileTableEntry fAlloc( String filename, String mode )
+    {
+        short iNumber;
+        Inode iNode;
 
-        short iNumber = -1; // inode number
-        Inode inode = null; // holds inode
+        while (true)
+        {
+            iNumber = (filename.equals("/") ? (short) 0 : directory.namei(filename));
 
-        while (true) {
-
-            iNumber = (filename.equals("/") ? (short) 0 : dir.namei(filename));
-
-            if (iNumber >= 0) {
-                inode = new Inode(iNumber);
-
-                if (mode.equals("r")) {
-                    if (inode.usedFlag == 0 || inode.usedFlag == 1 || inode.usedFlag == 2) {
-                        inode.usedFlag = 2;
+            if (iNumber >= 0)
+            {
+                iNode = new Inode(iNumber);
+                if (mode.equals("r"))
+                {
+                    if (iNode.usedFlag == 0 || iNode.usedFlag == 1 || iNode.usedFlag == 2)
+                    {
+                        iNode.usedFlag = 2;
                         break;
-                    } else if (inode.usedFlag == 3) {
-                        try {
-                            wait();
-                        } catch (InterruptedException e)
+                    }
+                    else if (iNode.usedFlag == 3)
+                    {
+                        try
                         {
-                            SysLib.cerr("Error while reading");
+                            wait();
+                        }
+                        catch (InterruptedException e)
+                        {
+                            SysLib.cerr("Read Error");
                         }
                     }
-
-                } else {
-                    if (inode.usedFlag == 1 || inode.usedFlag == 0) {
-                        inode.usedFlag = 3;
+                }
+                else
+                {
+                    if (iNode.usedFlag == 1 || iNode.usedFlag == 0)
+                    {
+                        iNode.usedFlag = 3;
                         break;
-                    } else {
-                        try {
+                    }
+                    else
+                    {
+                        try
+                        {
                             wait();
-                        } catch (InterruptedException e) { SysLib.cerr("Error while writing"); }
+                        }
+                        catch (InterruptedException e)
+                        {
+                            SysLib.cerr("Write Error");
+                        }
                     }
                 }
-            } else if (!mode.equals("r")) {
-                iNumber = dir.iAlloc(filename);
-                inode = new Inode(iNumber);
-                inode.usedFlag = 3;
+            }
+            else if (!mode.equals("r"))
+            {
+                iNumber = directory.iAlloc(filename);
+                iNode = new Inode(iNumber);
+                iNode.usedFlag = 3;
                 break;
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }
-        inode.count++;
-        inode.toDisk(iNumber);
-
-        FileTableEntry entry = new FileTableEntry(inode, iNumber, mode);
+        iNode.count++;
+        iNode.toDisk(iNumber);
+        FileTableEntry entry = new FileTableEntry(iNode, iNumber, mode);
         table.addElement(entry);
         return entry;
     }
 
-    public synchronized boolean ffree( FileTableEntry entry ) {
-        // receive a file table entry reference
-        // save the corresponding inode to the disk
-        // free this file table entry.
-        // return true if this file table entry found in my table    public synchronized boolean ffree( FileTableEntry e ) {
-        // receive a file table entry reference
-        // save the corresponding inode to the disk
-        // free this file table entry.
-        // return true if this file table entry found in my table
-
+    /**
+     * fFree( FileTableEntry entry )
+     * This method receives a FileTableEntry object reference
+     * Saves the corresponding inode to disk
+     * Frees this file from table entry
+     * @param entry
+     * @return return true if FileTableEntry found on table, else return false error
+     */
+    public synchronized boolean fFree( FileTableEntry entry )
+    {
         Inode inode = new Inode(entry.iNumber);
         if (table.remove(entry))
         {
@@ -102,20 +146,5 @@ public class FileTable {
             return true;
         }
         return false;
-    }
-
-    public synchronized boolean fempty( ) {
-        return table.isEmpty( );  // return if table is empty
-    }                            // should be called before starting a format
-
-    public Inode getInode(short iNumber)
-    {
-        boolean found = true;
-        for(int i = 0; i < table.size(); i++) {
-            if (table.elementAt(i).iNumber == iNumber) {
-                return table.elementAt(i).iNode;
-            }
-        }
-        return null;
     }
 }
